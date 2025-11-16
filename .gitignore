@@ -2,8 +2,7 @@
 .env
 config/env.php
 create_hash.php
-admin/fix_password.php
-admin/reset_password.php
+
 
 # Logs
 *.log
