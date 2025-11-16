@@ -140,6 +140,8 @@ return [
         'success' => 'Success',
     ],
     'error' => [
+        '403_title' => 'Forbidden',
+        '403_message' => 'Sorry, you do not have permission to access this page. This page is protected or you have not been granted access.',
         '404_title' => 'Page Not Found',
         '404_message' => 'Sorry, the page you are looking for does not exist or has been removed.',
         '500_title' => 'Server Error',

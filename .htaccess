@@ -1,6 +1,7 @@
 # Apache konfiguratsiya
 
 # Error pages
+ErrorDocument 403 /403.php
 ErrorDocument 404 /404.php
 ErrorDocument 500 /500.php
 ErrorDocument 301 /301.php

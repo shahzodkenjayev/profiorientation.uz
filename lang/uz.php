@@ -140,6 +140,8 @@ return [
         'success' => 'Muvaffaqiyatli',
     ],
     'error' => [
+        '403_title' => 'Ruhsat etilmagan',
+        '403_message' => 'Kechirasiz, siz bu sahifaga kirish huquqiga ega emassiz. Bu sahifa himoyalangan yoki sizga ruhsat berilmagan.',
         '404_title' => 'Sahifa topilmadi',
         '404_message' => 'Kechirasiz, siz qidirayotgan sahifa mavjud emas yoki o\'chirilgan.',
         '500_title' => 'Server xatosi',

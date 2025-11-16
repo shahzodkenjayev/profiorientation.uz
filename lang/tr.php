@@ -140,6 +140,8 @@ return [
         'success' => 'Başarılı',
     ],
     'error' => [
+        '403_title' => 'Erişim Yasak',
+        '403_message' => 'Üzgünüz, bu sayfaya erişim izniniz yok. Bu sayfa korumalı veya size erişim izni verilmemiş.',
         '404_title' => 'Sayfa Bulunamadı',
         '404_message' => 'Üzgünüz, aradığınız sayfa mevcut değil veya kaldırılmış.',
         '500_title' => 'Sunucu Hatası',
