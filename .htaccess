@@ -52,7 +52,10 @@ RewriteRule ^admin/([^/]+)$ admin/$1.php [L]
 
 # Protect config papkasi va fayllari
 RewriteRule ^config/ - [F,L]
-<DirectoryMatch "^.*/config/">
+RewriteRule ^config$ - [F,L]
+
+# Protect config files (root papkada)
+<Files "config.php">
     <IfModule mod_authz_core.c>
         Require all denied
     </IfModule>
@@ -60,24 +63,38 @@ RewriteRule ^config/ - [F,L]
         Order allow,deny
         Deny from all
     </IfModule>
-</DirectoryMatch>
+</Files>
 
-# Protect config files (root papkada)
-<FilesMatch "^(config|database|env)\.php$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
+<Files "database.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+<Files "env.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
 
 # Protect .env file
-<FilesMatch "^\.env$">
-    Order allow,deny
-    Deny from all
-</FilesMatch>
-
-# Protect includes papkasi (faqat directory listing o'chirish, fayllar ishlashi kerak)
-<DirectoryMatch "^.*/includes/">
-    Options -Indexes
-</DirectoryMatch>
+<Files ".env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
 
 # PHP closing tag va oxiridagi bo'sh qatorlarni yashirish
 # Output buffering - PHP fayllarining oxiridagi bo'sh qatorlarni yashirish
