@@ -1,7 +1,15 @@
 <?php
 require_once '../config/config.php';
 
+// AJAX so'rovlar uchun JSON response
+$isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
 if (isLoggedIn()) {
+    if ($isAjax) {
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'redirect' => BASE_URL . 'test/start.php']);
+        exit;
+    }
     redirect(BASE_URL . 'test/start.php');
 }
 
@@ -19,14 +27,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             if (empty($phone)) {
                 $error = 'Telefon raqamni kiriting!';
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => $error]);
+                    exit;
+                }
             } elseif (empty($verification_code)) {
-                // SMS kod yuborish
-                $code = rand(1000, 9999);
-                $_SESSION['phone_verification_code'] = $code;
-                $_SESSION['phone_verification_number'] = $phone;
-                $_SESSION['phone_verification_time'] = time();
-                // TODO: SMS API integratsiya qiling
-                $success = 'Tasdiqlash kodi yuborildi: ' . $code; // Test uchun - production da o'chirish kerak
+                // Kod yuborilmagan, send_code.php ga yuborish kerak
+                $error = 'Avval kod yuborishingiz kerak!';
+                if ($isAjax) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => $error]);
+                    exit;
+                }
             } else {
                 if (isset($_SESSION['phone_verification_code']) && 
                     isset($_SESSION['phone_verification_time']) &&
@@ -41,12 +54,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($user) {
                         $_SESSION['user_id'] = $user['id'];
                         unset($_SESSION['phone_verification_code']);
-                        redirect(BASE_URL . ($user['test_completed'] ? 'results/view.php' : 'test/start.php'));
+                        $redirectUrl = BASE_URL . ($user['test_completed'] ? 'results/view.php' : 'test/start.php');
+                        if ($isAjax) {
+                            header('Content-Type: application/json');
+                            echo json_encode(['success' => true, 'redirect' => $redirectUrl]);
+                            exit;
+                        }
+                        redirect($redirectUrl);
                     } else {
                         $error = 'Foydalanuvchi topilmadi!';
                     }
                 } else {
                     $error = 'Noto\'g\'ri tasdiqlash kodi!';
+                }
+                
+                if ($isAjax && $error) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => $error]);
+                    exit;
                 }
             }
         } elseif ($login_type === 'telegram') {

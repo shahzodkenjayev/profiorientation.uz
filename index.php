@@ -495,18 +495,19 @@ if (isLoggedIn()) {
             
             <!-- Phone login section -->
             <div id="phone-section-modal" class="login-section-modal active">
-                <form action="<?= BASE_URL ?>auth/login" method="POST">
+                <form id="phoneLoginForm" method="POST">
                     <input type="hidden" name="login_type" value="phone">
                     <div class="form-group">
                         <label><?= __('auth.phone') ?></label>
-                        <input type="tel" name="phone" placeholder="+998901234567" required>
+                        <input type="tel" id="phone-input-modal" name="phone" placeholder="+998901234567" required>
                     </div>
                     <div class="form-group" id="verification-group-modal" style="display:none;">
                         <label><?= __('auth.verification_code') ?></label>
-                        <input type="text" name="verification_code" placeholder="4 xonali kod" maxlength="4" pattern="[0-9]{4}">
+                        <input type="text" id="verification-code-input-modal" name="verification_code" placeholder="4 xonali kod" maxlength="4" pattern="[0-9]{4}">
                         <small class="text-muted">Telefoningizga yuborilgan kodni kiriting</small>
                     </div>
-                    <button type="submit" class="btn-login-submit"><?= __('nav.login') ?></button>
+                    <button type="button" id="send-code-btn-modal" class="btn-login-submit">Kod yuborish</button>
+                    <button type="submit" id="verify-code-btn-modal" class="btn-login-submit" style="display:none;"><?= __('nav.login') ?></button>
                 </form>
             </div>
             
@@ -515,15 +516,6 @@ if (isLoggedIn()) {
                 <div class="telegram-widget-container">
                     <p style="text-align: center; margin-bottom: 20px; color: #666;">
                         <?= __('auth.telegram') ?> orqali kirish:
-                    </p>
-                    <a href="https://t.me/<?= TELEGRAM_BOT_USERNAME ?>?start=login" 
-                       target="_blank" 
-                       class="btn-login-submit" 
-                       style="display: block; text-decoration: none; text-align: center;">
-                        ✈️ Telegram Bot orqali kirish
-                    </a>
-                    <p style="text-align: center; font-size: 12px; color: #999; margin-top: 15px;">
-                        Yoki quyidagi widget orqali:
                     </p>
                     <div style="text-align: center; margin: 20px 0;">
                         <script async src="https://telegram.org/js/telegram-widget.js?22" 
@@ -543,18 +535,7 @@ if (isLoggedIn()) {
                     <p style="text-align: center; margin-bottom: 20px; color: #666;">
                         <?= __('auth.google') ?> orqali kirish:
                     </p>
-                    <div id="g_id_onload_modal"
-                         data-client_id="<?= GOOGLE_CLIENT_ID ?>"
-                         data-callback="onGoogleSignInModal">
-                    </div>
-                    <div class="g_id_signin" 
-                         data-type="standard"
-                         data-size="large"
-                         data-theme="outline"
-                         data-text="sign_in_with"
-                         data-shape="rectangular"
-                         data-logo_alignment="left">
-                    </div>
+                    <div id="google-signin-button-modal" style="text-align: center; margin: 20px 0;"></div>
                 </div>
             </div>
             
@@ -580,6 +561,107 @@ if (isLoggedIn()) {
             }
         }
         
+        // Phone login - kod yuborish
+        document.addEventListener('DOMContentLoaded', function() {
+            const phoneForm = document.getElementById('phoneLoginForm');
+            const phoneInput = document.getElementById('phone-input-modal');
+            const sendCodeBtn = document.getElementById('send-code-btn-modal');
+            const verifyCodeBtn = document.getElementById('verify-code-btn-modal');
+            const verificationGroup = document.getElementById('verification-group-modal');
+            const verificationCodeInput = document.getElementById('verification-code-input-modal');
+            
+            if (sendCodeBtn) {
+                sendCodeBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const phone = phoneInput.value.trim();
+                    
+                    if (!phone) {
+                        alert('Telefon raqamni kiriting!');
+                        return;
+                    }
+                    
+                    // AJAX orqali kod yuborish
+                    sendCodeBtn.disabled = true;
+                    sendCodeBtn.textContent = 'Yuborilmoqda...';
+                    
+                    fetch('<?= BASE_URL ?>auth/send_code', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: 'phone=' + encodeURIComponent(phone)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            verificationGroup.style.display = 'block';
+                            sendCodeBtn.style.display = 'none';
+                            verifyCodeBtn.style.display = 'block';
+                            verificationCodeInput.focus();
+                            alert('Tasdiqlash kodi yuborildi! Kod: ' + data.code); // Test uchun
+                        } else {
+                            alert(data.message || 'Xatolik yuz berdi!');
+                            sendCodeBtn.disabled = false;
+                            sendCodeBtn.textContent = 'Kod yuborish';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Xatolik yuz berdi!');
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = 'Kod yuborish';
+                    });
+                });
+            }
+            
+            // Form submit - kodni tasdiqlash
+            if (phoneForm) {
+                phoneForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const phone = phoneInput.value.trim();
+                    const code = verificationCodeInput.value.trim();
+                    
+                    if (!code) {
+                        alert('Tasdiqlash kodini kiriting!');
+                        return;
+                    }
+                    
+                    // Form submit qilish
+                    const formData = new FormData();
+                    formData.append('login_type', 'phone');
+                    formData.append('phone', phone);
+                    formData.append('verification_code', code);
+                    
+                    verifyCodeBtn.disabled = true;
+                    verifyCodeBtn.textContent = 'Tekshirilmoqda...';
+                    
+                    fetch('<?= BASE_URL ?>auth/login', {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        },
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success && data.redirect) {
+                            window.location.href = data.redirect;
+                        } else {
+                            alert(data.message || 'Xatolik yuz berdi!');
+                            verifyCodeBtn.disabled = false;
+                            verifyCodeBtn.textContent = '<?= __('nav.login') ?>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Xatolik yuz berdi!');
+                        verifyCodeBtn.disabled = false;
+                        verifyCodeBtn.textContent = '<?= __('nav.login') ?>';
+                    });
+                });
+            }
+        });
+        
         // Google Sign-In initialization for modal
         window.addEventListener('load', function() {
             if (typeof google !== 'undefined' && google.accounts) {
@@ -588,27 +670,27 @@ if (isLoggedIn()) {
                     callback: onGoogleSignInModal
                 });
                 
-                // Render button when modal opens
+                // Render button when modal opens and Google section is active
                 const loginModal = document.getElementById('loginModal');
-                if (loginModal) {
-                    const observer = new MutationObserver(function(mutations) {
-                        mutations.forEach(function(mutation) {
-                            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                                if (loginModal.classList.contains('active')) {
-                                    const googleSection = document.getElementById('google-section-modal');
-                                    if (googleSection && googleSection.classList.contains('active')) {
-                                        setTimeout(function() {
-                                            google.accounts.id.renderButton(
-                                                document.querySelector('#google-section-modal .g_id_signin'),
-                                                { theme: 'outline', size: 'large', text: 'sign_in_with', shape: 'rectangular' }
-                                            );
-                                        }, 100);
+                const loginTypeBtns = document.querySelectorAll('.login-type-btn');
+                
+                if (loginModal && loginTypeBtns.length > 0) {
+                    // Google section tanlanganda button render qilish
+                    loginTypeBtns.forEach(btn => {
+                        btn.addEventListener('click', function() {
+                            if (this.dataset.type === 'google') {
+                                setTimeout(function() {
+                                    const googleButtonContainer = document.getElementById('google-signin-button-modal');
+                                    if (googleButtonContainer && googleButtonContainer.children.length === 0) {
+                                        google.accounts.id.renderButton(
+                                            googleButtonContainer,
+                                            { theme: 'outline', size: 'large', text: 'sign_in_with', shape: 'rectangular' }
+                                        );
                                     }
-                                }
+                                }, 100);
                             }
                         });
                     });
-                    observer.observe(loginModal, { attributes: true });
                 }
             }
         });
