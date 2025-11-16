@@ -24,8 +24,36 @@ if ($app_debug) {
     ini_set('display_errors', 0);
 }
 
-// Base URL
-define('BASE_URL', env('BASE_URL', 'https://profiorientation.uz/'));
+// Base URL - dinamik (HTTP_HOST dan olinadi)
+// Ikkala domen uchun ham ishlaydi: profiorientation.uz va profiorientation.cybernode.uz
+function getBaseUrl() {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+    $host = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'] ?? 'profiorientation.uz';
+    
+    // Ruxsat etilgan domenlar ro'yxati
+    $allowedDomains = [
+        'profiorientation.uz',
+        'www.profiorientation.uz',
+        'profiorientation.cybernode.uz',
+        'www.profiorientation.cybernode.uz'
+    ];
+    
+    // Agar domen ruxsat etilgan ro'yxatda bo'lsa, ishlatish
+    if (in_array($host, $allowedDomains)) {
+        return $protocol . $host . '/';
+    }
+    
+    // .env dan olish yoki default qiymat
+    $envBaseUrl = env('BASE_URL', '');
+    if (!empty($envBaseUrl)) {
+        return $envBaseUrl;
+    }
+    
+    // Default qiymat
+    return 'https://profiorientation.uz/';
+}
+
+define('BASE_URL', getBaseUrl());
 
 // Paths
 define('ROOT_PATH', __DIR__ . '/../');

@@ -63,6 +63,7 @@ chmod 755 uploads/
 
 #### Apache (.htaccess allaqachon mavjud)
 ```apache
+# Asosiy domen: profiorientation.uz
 <VirtualHost *:80>
     ServerName profiorientation.uz
     ServerAlias www.profiorientation.uz
@@ -95,18 +96,52 @@ chmod 755 uploads/
         Options -Indexes +FollowSymLinks
     </Directory>
 </VirtualHost>
+
+# Zaxira domen: profiorientation.cybernode.uz
+<VirtualHost *:80>
+    ServerName profiorientation.cybernode.uz
+    ServerAlias www.profiorientation.cybernode.uz
+    DocumentRoot /var/www/html/profiorientation.uz
+    
+    <Directory /var/www/html/profiorientation.uz>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+    
+    # HTTPS ga redirect (SSL sozlangandan keyin)
+    # RewriteEngine On
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName profiorientation.cybernode.uz
+    ServerAlias www.profiorientation.cybernode.uz
+    DocumentRoot /var/www/html/profiorientation.uz
+    
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/profiorientation.cybernode.uz/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/profiorientation.cybernode.uz/privkey.pem
+    
+    <Directory /var/www/html/profiorientation.uz>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+</VirtualHost>
 ```
 
 #### Nginx
 ```nginx
-# HTTP - HTTPS ga redirect
+# HTTP - HTTPS ga redirect (asosiy domen)
 server {
     listen 80;
     server_name profiorientation.uz www.profiorientation.uz;
     return 301 https://profiorientation.uz$request_uri;
 }
 
-# HTTPS
+# HTTPS (asosiy domen)
 server {
     listen 443 ssl http2;
     server_name profiorientation.uz www.profiorientation.uz;
@@ -136,13 +171,57 @@ server {
         try_files $uri $uri/ /$1.php?$query_string;
     }
 }
+
+# HTTP - HTTPS ga redirect (zaxira domen)
+server {
+    listen 80;
+    server_name profiorientation.cybernode.uz www.profiorientation.cybernode.uz;
+    return 301 https://profiorientation.cybernode.uz$request_uri;
+}
+
+# HTTPS (zaxira domen)
+server {
+    listen 443 ssl http2;
+    server_name profiorientation.cybernode.uz www.profiorientation.cybernode.uz;
+    root /var/www/html/profiorientation.uz;
+    index index.php;
+
+    ssl_certificate /etc/letsencrypt/live/profiorientation.cybernode.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/profiorientation.cybernode.uz/privkey.pem;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.0-fpm.sock;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+        include fastcgi_params;
+    }
+
+    location ~ /\. {
+        deny all;
+    }
+    
+    # PHP kengaytmasini yashirish
+    location ~ ^/([^/]+)$ {
+        try_files $uri $uri/ /$1.php?$query_string;
+    }
+}
 ```
 
 ### 8. SSL sertifikat (HTTPS)
 ```bash
-sudo certbot --nginx -d profiorientation.uz
+# Asosiy domen uchun
+sudo certbot --nginx -d profiorientation.uz -d www.profiorientation.uz
 # yoki
-sudo certbot --apache -d profiorientation.uz
+sudo certbot --apache -d profiorientation.uz -d www.profiorientation.uz
+
+# Zaxira domen uchun
+sudo certbot --nginx -d profiorientation.cybernode.uz -d www.profiorientation.cybernode.uz
+# yoki
+sudo certbot --apache -d profiorientation.cybernode.uz -d www.profiorientation.cybernode.uz
 ```
 
 ### 9. Yangilanishlar

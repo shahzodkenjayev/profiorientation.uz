@@ -26,13 +26,15 @@
 2. "+ CREATE CREDENTIALS" → "OAuth client ID" ni tanlang
 3. **Application type**: `Web application` ni tanlang
 4. **Name**: `Prof Orientatsiya Web Client`
-5. **Authorized JavaScript origins**:
+5. **Authorized JavaScript origins** (ikkala domen uchun):
    ```
    https://profiorientation.uz
+   https://profiorientation.cybernode.uz
    ```
-6. **Authorized redirect URIs**:
+6. **Authorized redirect URIs** (ikkala domen uchun):
    ```
    https://profiorientation.uz/auth/google_callback
+   https://profiorientation.cybernode.uz/auth/google_callback
    ```
 7. "CREATE" tugmasini bosing
 
