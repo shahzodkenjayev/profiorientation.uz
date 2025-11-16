@@ -96,6 +96,19 @@ RewriteRule ^config$ - [F,L]
     </IfModule>
 </Files>
 
+# Protect admin utility scripts (production'da bloklash)
+RewriteRule ^admin/fix_password - [F,L]
+RewriteRule ^admin/reset_password - [F,L]
+<FilesMatch "^(fix_password|reset_password)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 # PHP closing tag va oxiridagi bo'sh qatorlarni yashirish
 # Output buffering - PHP fayllarining oxiridagi bo'sh qatorlarni yashirish
 php_value output_buffering 4096

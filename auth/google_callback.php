@@ -6,20 +6,20 @@ require_once '../config/config.php';
 $credential = $_GET['credential'] ?? '';
 
 if (empty($credential)) {
-    redirect(BASE_URL . 'auth/register.php?error=google_auth_failed');
+    redirect(BASE_URL . 'auth/register?error=google_auth_failed');
 }
 
 // JWT token'ni decode qilish
 $parts = explode('.', $credential);
 if (count($parts) !== 3) {
-    redirect(BASE_URL . 'auth/register.php?error=invalid_google_token');
+    redirect(BASE_URL . 'auth/register?error=invalid_google_token');
 }
 
 // Payload'ni decode qilish
 $payload = json_decode(base64_decode(str_replace(['-', '_'], ['+', '/'], $parts[1])), true);
 
 if (!$payload) {
-    redirect(BASE_URL . 'auth/register.php?error=invalid_google_token');
+    redirect(BASE_URL . 'auth/register?error=invalid_google_token');
 }
 
 // Ma'lumotlarni olish
@@ -34,7 +34,7 @@ if (empty($full_name)) {
 }
 
 if (empty($google_id)) {
-    redirect(BASE_URL . 'auth/register.php?error=invalid_google_data');
+    redirect(BASE_URL . 'auth/register?error=invalid_google_data');
 }
 
 // Foydalanuvchini tekshirish
@@ -59,6 +59,33 @@ try {
             redirect(BASE_URL . 'test/start.php');
         }
     } else {
+        // Yangi foydalanuvchi, email orqali ham tekshirish
+        if (!empty($email)) {
+            $stmt = $db->prepare("SELECT * FROM users WHERE email = ?");
+            $stmt->execute([$email]);
+            $user_by_email = $stmt->fetch();
+            
+            if ($user_by_email) {
+                // Email orqali foydalanuvchi topildi, google_id ni yangilash va login qilish
+                $stmt = $db->prepare("UPDATE users SET google_id = ? WHERE id = ?");
+                $stmt->execute([$google_id, $user_by_email['id']]);
+                
+                $_SESSION['user_id'] = $user_by_email['id'];
+                $_SESSION['google_auth_data'] = [
+                    'id' => $google_id,
+                    'email' => $email,
+                    'name' => $name
+                ];
+                
+                if ($user_by_email['test_completed']) {
+                    redirect(BASE_URL . 'results/view.php');
+                } else {
+                    redirect(BASE_URL . 'test/start.php');
+                }
+                exit;
+            }
+        }
+        
         // Yangi foydalanuvchi, ma'lumotlarni session'ga saqlash va register sahifasiga yuborish
         $_SESSION['google_auth_data'] = [
             'id' => $google_id,
@@ -66,10 +93,10 @@ try {
             'name' => $name
         ];
         $_SESSION['google_full_name'] = $full_name;
-        redirect(BASE_URL . 'auth/register.php?google=1');
+        redirect(BASE_URL . 'auth/register?google=1');
     }
 } catch (PDOException $e) {
-    redirect(BASE_URL . 'auth/register.php?error=db_error');
+    redirect(BASE_URL . 'auth/register?error=db_error');
 }
 ?>
 

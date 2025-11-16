@@ -134,17 +134,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $email = $google_data['email'] ?? '';
                         $google_full_name = $_SESSION['google_full_name'] ?? $full_name;
                         
-                        // Foydalanuvchini topish
-                        $stmt = $db->prepare("SELECT * FROM users WHERE google_id = ?");
-                        $stmt->execute([$google_id]);
+                        // Foydalanuvchini topish - google_id yoki email orqali
+                        $stmt = $db->prepare("SELECT * FROM users WHERE google_id = ? OR email = ?");
+                        $stmt->execute([$google_id, $email]);
                         $existing_user = $stmt->fetch();
                         
                         if ($existing_user) {
-                            // Foydalanuvchi mavjud, login qilish
+                            // Foydalanuvchi mavjud, google_id ni yangilash va login qilish
+                            if (empty($existing_user['google_id'])) {
+                                $stmt = $db->prepare("UPDATE users SET google_id = ? WHERE id = ?");
+                                $stmt->execute([$google_id, $existing_user['id']]);
+                            }
+                            
                             $_SESSION['user_id'] = $existing_user['id'];
                             unset($_SESSION['google_auth_data']);
                             unset($_SESSION['google_full_name']);
-                            redirect(BASE_URL . 'payment/index.php');
+                            
+                            if ($existing_user['test_completed']) {
+                                redirect(BASE_URL . 'results/view.php');
+                            } else {
+                                redirect(BASE_URL . 'payment/index.php');
+                            }
                         } else {
                             // Yangi foydalanuvchi yaratish
                             $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, class_number, school_name, login_type, exam_date) 
