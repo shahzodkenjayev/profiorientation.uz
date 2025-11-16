@@ -1,0 +1,35 @@
+# Apache konfiguratsiya
+
+# Error pages
+ErrorDocument 404 /ptest/index.php
+
+# PHP sozlamalari
+php_flag display_errors On
+php_value error_reporting E_ALL
+
+# UTF-8 encoding
+AddDefaultCharset UTF-8
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# URL rewrite (ixtiyoriy)
+RewriteEngine On
+RewriteBase /ptest/
+
+# Protect config files
+<FilesMatch "^(config|database|env)\.php$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Protect .env file
+<FilesMatch "^\.env$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+

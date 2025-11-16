@@ -1,0 +1,37 @@
+# Environment variables
+.env
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.cache
+
+# Backup files
+*.bak
+*.backup
+
+# Vendor (agar Composer ishlatilsa)
+vendor/
+
+# Node modules (agar npm ishlatilsa)
+node_modules/
+
+# Uploads
+uploads/
+temp/
+

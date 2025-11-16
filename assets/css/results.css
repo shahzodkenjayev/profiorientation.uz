@@ -1,0 +1,125 @@
+/* Natijalar sahifasi CSS */
+
+.results-header {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.results-header h1 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.results-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.result-card {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.result-card h2,
+.result-card h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.main-result {
+    grid-column: 1 / -1;
+    text-align: center;
+}
+
+.profession-name {
+    font-size: 32px;
+    font-weight: bold;
+    color: #667eea;
+    margin: 20px 0;
+}
+
+.match-percentage {
+    margin: 30px 0;
+}
+
+.percentage-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    color: white;
+    font-size: 36px;
+    font-weight: bold;
+}
+
+.personality-badge {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 25px;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.personality-leader {
+    background: #ffd700;
+    color: #333;
+}
+
+.personality-creative {
+    background: #ff6b6b;
+    color: white;
+}
+
+.personality-analytical {
+    background: #4ecdc4;
+    color: white;
+}
+
+.personality-supportive {
+    background: #95e1d3;
+    color: #333;
+}
+
+.strengths-list {
+    list-style: none;
+    padding: 0;
+}
+
+.strengths-list li {
+    padding: 10px;
+    margin-bottom: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.result-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .results-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .result-actions {
+        flex-direction: column;
+    }
+}
+
