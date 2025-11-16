@@ -1,0 +1,4 @@
+# Config papkasini to'liq himoya qilish
+Order allow,deny
+Deny from all
+

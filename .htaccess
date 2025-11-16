@@ -13,6 +13,9 @@ ErrorDocument 301 /301.php
 # UTF-8 encoding
 AddDefaultCharset UTF-8
 
+# Directory listing'ni o'chirish
+Options -Indexes
+
 # Security headers
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
@@ -46,7 +49,19 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^admin/([^/]+)$ admin/$1.php [L]
 
-# Protect config files
+# Protect config papkasi va fayllari
+RewriteRule ^config/ - [F,L]
+<DirectoryMatch "^.*/config/">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</DirectoryMatch>
+
+# Protect config files (root papkada)
 <FilesMatch "^(config|database|env)\.php$">
     Order allow,deny
     Deny from all
@@ -57,6 +72,11 @@ RewriteRule ^admin/([^/]+)$ admin/$1.php [L]
     Order allow,deny
     Deny from all
 </FilesMatch>
+
+# Protect includes papkasi (faqat directory listing o'chirish, fayllar ishlashi kerak)
+<DirectoryMatch "^.*/includes/">
+    Options -Indexes
+</DirectoryMatch>
 
 # PHP closing tag va oxiridagi bo'sh qatorlarni yashirish
 # Output buffering - PHP fayllarining oxiridagi bo'sh qatorlarni yashirish
