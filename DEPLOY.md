@@ -10,7 +10,7 @@ ssh user@your-server.com
 ### 2. Loyihani klonlash
 ```bash
 cd /var/www/html  # yoki boshqa web root papkasi
-git clone git@github.com:shahzodkenjayev/profiorientation.uz.git
+git clone git@github.com:shahzodkenjayev/profiorientation.uz.git profiorientation.uz
 cd profiorientation.uz
 ```
 
@@ -65,22 +65,56 @@ chmod 755 uploads/
 ```apache
 <VirtualHost *:80>
     ServerName profiorientation.uz
+    ServerAlias www.profiorientation.uz
     DocumentRoot /var/www/html/profiorientation.uz
     
     <Directory /var/www/html/profiorientation.uz>
         AllowOverride All
         Require all granted
+        Options -Indexes +FollowSymLinks
+    </Directory>
+    
+    # HTTPS ga redirect (SSL sozlangandan keyin)
+    # RewriteEngine On
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</VirtualHost>
+
+<VirtualHost *:443>
+    ServerName profiorientation.uz
+    ServerAlias www.profiorientation.uz
+    DocumentRoot /var/www/html/profiorientation.uz
+    
+    SSLEngine on
+    SSLCertificateFile /etc/letsencrypt/live/profiorientation.uz/fullchain.pem
+    SSLCertificateKeyFile /etc/letsencrypt/live/profiorientation.uz/privkey.pem
+    
+    <Directory /var/www/html/profiorientation.uz>
+        AllowOverride All
+        Require all granted
+        Options -Indexes +FollowSymLinks
     </Directory>
 </VirtualHost>
 ```
 
 #### Nginx
 ```nginx
+# HTTP - HTTPS ga redirect
 server {
     listen 80;
-    server_name profiorientation.uz;
+    server_name profiorientation.uz www.profiorientation.uz;
+    return 301 https://profiorientation.uz$request_uri;
+}
+
+# HTTPS
+server {
+    listen 443 ssl http2;
+    server_name profiorientation.uz www.profiorientation.uz;
     root /var/www/html/profiorientation.uz;
     index index.php;
+
+    ssl_certificate /etc/letsencrypt/live/profiorientation.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/profiorientation.uz/privkey.pem;
 
     location / {
         try_files $uri $uri/ /index.php?$query_string;
@@ -95,6 +129,11 @@ server {
 
     location ~ /\. {
         deny all;
+    }
+    
+    # PHP kengaytmasini yashirish
+    location ~ ^/([^/]+)$ {
+        try_files $uri $uri/ /$1.php?$query_string;
     }
 }
 ```

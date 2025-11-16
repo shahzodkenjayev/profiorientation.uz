@@ -139,6 +139,17 @@ return [
         'error' => 'An error occurred',
         'success' => 'Success',
     ],
+    'error' => [
+        '404_title' => 'Page Not Found',
+        '404_message' => 'Sorry, the page you are looking for does not exist or has been removed.',
+        '500_title' => 'Server Error',
+        '500_message' => 'Sorry, an error occurred on the server. Please try again later.',
+        '301_title' => 'Permanent Redirect',
+        '301_message' => 'The page has been moved to another location.',
+        'back_home' => 'Back to Home',
+        'go_back' => 'Go Back',
+        'refresh' => 'Refresh',
+    ],
 ];
 ?>
 

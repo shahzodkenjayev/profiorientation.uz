@@ -139,6 +139,17 @@ return [
         'error' => 'Xatolik yuz berdi',
         'success' => 'Muvaffaqiyatli',
     ],
+    'error' => [
+        '404_title' => 'Sahifa topilmadi',
+        '404_message' => 'Kechirasiz, siz qidirayotgan sahifa mavjud emas yoki o\'chirilgan.',
+        '500_title' => 'Server xatosi',
+        '500_message' => 'Kechirasiz, serverda xatolik yuz berdi. Iltimos, keyinroq qayta urinib ko\'ring.',
+        '301_title' => 'Permanent Redirect',
+        '301_message' => 'Sahifa boshqa manzilga ko\'chirilgan.',
+        'back_home' => 'Bosh sahifaga qaytish',
+        'go_back' => 'Orqaga',
+        'refresh' => 'Qayta yuklash',
+    ],
 ];
 ?>
 

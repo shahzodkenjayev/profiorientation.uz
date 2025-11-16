@@ -22,6 +22,50 @@ if (isLoggedIn()) {
     <title><?= __('site.hero_title') ?> - <?= __('site.title') ?></title>
     <link rel="stylesheet" href="<?= ASSETS_PATH ?>css/style.css">
     <link rel="stylesheet" href="<?= ASSETS_PATH ?>css/homepage.css">
+    <style>
+        .register-dropdown {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+            min-width: 180px;
+            padding: 8px 0;
+            z-index: 1000;
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .register-link {
+            display: block;
+            padding: 12px 20px;
+            text-decoration: none;
+            color: #0a0a0a;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .register-link:hover {
+            background: #f8f9fa;
+            color: #2563eb;
+        }
+        
+        .header-buttons {
+            position: relative;
+        }
+    </style>
     <script>
         // Header scroll effect
         window.addEventListener('scroll', function() {
@@ -30,6 +74,26 @@ if (isLoggedIn()) {
                 header.classList.add('scrolled');
             } else {
                 header.classList.remove('scrolled');
+            }
+        });
+        
+        // Login toggle button
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginBtn = document.getElementById('loginToggleBtn');
+            const registerDropdown = document.getElementById('registerDropdown');
+            
+            if (loginBtn && registerDropdown) {
+                loginBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    registerDropdown.style.display = registerDropdown.style.display === 'none' ? 'block' : 'none';
+                });
+                
+                // Click outside to close
+                document.addEventListener('click', function(e) {
+                    if (!loginBtn.contains(e.target) && !registerDropdown.contains(e.target)) {
+                        registerDropdown.style.display = 'none';
+                    }
+                });
             }
         });
     </script>
@@ -44,8 +108,10 @@ if (isLoggedIn()) {
                 </div>
                 <div class="header-buttons">
                     <?php include INCLUDES_PATH . 'language_switcher.php'; ?>
-                    <a href="auth/register.php" class="btn-header btn-register"><?= __('nav.register') ?></a>
-                    <a href="auth/login.php" class="btn-header btn-login"><?= __('nav.login') ?></a>
+                    <button type="button" id="loginToggleBtn" class="btn-header btn-login"><?= __('nav.login') ?></button>
+                    <div id="registerDropdown" class="register-dropdown" style="display: none;">
+                        <a href="<?= BASE_URL ?>auth/register" class="register-link"><?= __('nav.register') ?></a>
+                    </div>
                 </div>
             </nav>
         </div>
@@ -57,7 +123,7 @@ if (isLoggedIn()) {
             <div class="hero-content">
                 <h1 class="hero-title"><?= __('site.hero_title') ?></h1>
                 <p class="hero-subtitle"><?= __('site.hero_subtitle') ?></p>
-                <a href="auth/register.php" class="btn-hero"><?= __('nav.register') ?></a>
+                <a href="<?= BASE_URL ?>auth/register" class="btn-hero"><?= __('nav.register') ?></a>
             </div>
         </div>
     </section>
@@ -188,8 +254,7 @@ if (isLoggedIn()) {
                 <h2 class="cta-title"><?= __('site.cta_title') ?></h2>
                 <p class="cta-subtitle"><?= __('site.cta_subtitle') ?></p>
                 <div class="cta-buttons">
-                    <a href="auth/register.php" class="btn-primary btn-large"><?= __('nav.register') ?></a>
-                    <a href="auth/login.php" class="btn-secondary btn-large"><?= __('nav.login') ?></a>
+                    <a href="<?= BASE_URL ?>auth/login" class="btn-primary btn-large"><?= __('nav.login') ?></a>
                 </div>
             </div>
         </div>

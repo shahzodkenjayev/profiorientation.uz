@@ -1,6 +1,11 @@
 <?php
 // Asosiy konfiguratsiya
 
+// Output buffering - PHP fayllarining oxiridagi bo'sh qatorlarni yashirish
+if (!ob_get_level()) {
+    ob_start();
+}
+
 session_start();
 
 // .env faylini yuklash
@@ -20,7 +25,7 @@ if ($app_debug) {
 }
 
 // Base URL
-define('BASE_URL', env('BASE_URL', 'http://localhost/ptest/'));
+define('BASE_URL', env('BASE_URL', 'https://profiorientation.uz/'));
 
 // Paths
 define('ROOT_PATH', __DIR__ . '/../');
@@ -89,5 +94,4 @@ function redirect($url) {
     header('Location: ' . $url);
     exit;
 }
-?>
 

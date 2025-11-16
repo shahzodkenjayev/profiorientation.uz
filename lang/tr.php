@@ -139,6 +139,17 @@ return [
         'error' => 'Bir hata oluştu',
         'success' => 'Başarılı',
     ],
+    'error' => [
+        '404_title' => 'Sayfa Bulunamadı',
+        '404_message' => 'Üzgünüz, aradığınız sayfa mevcut değil veya kaldırılmış.',
+        '500_title' => 'Sunucu Hatası',
+        '500_message' => 'Üzgünüz, sunucuda bir hata oluştu. Lütfen daha sonra tekrar deneyin.',
+        '301_title' => 'Kalıcı Yönlendirme',
+        '301_message' => 'Sayfa başka bir konuma taşınmış.',
+        'back_home' => 'Ana Sayfaya Dön',
+        'go_back' => 'Geri Git',
+        'refresh' => 'Yenile',
+    ],
 ];
 ?>
 

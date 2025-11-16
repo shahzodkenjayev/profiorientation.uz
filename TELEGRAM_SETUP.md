@@ -13,10 +13,7 @@ Telegram Login Widget ishlashi uchun bot sozlamalarida domain qo'shish kerak.
 
 2. **Domain qo'shish:**
    - `Bot Settings` → `Domain` ni tanlang
-   - Domain qo'shing:
-     - Localhost uchun: `localhost`
-     - Yoki to'liq path: `localhost/ptest`
-     - Production uchun: `yourdomain.com`
+   - Domain qo'shing: `profiorientation.uz`
 
 3. **Callback URL:**
    - Bot sozlamalarida callback URL qo'shish shart emas
@@ -31,8 +28,8 @@ Bu link register sahifasida ko'rsatiladi.
 
 ### Test qilish:
 
-1. BotFather orqali domain qo'shing
-2. `http://localhost/ptest/auth/register.php` sahifasiga kiring
+1. BotFather orqali domain qo'shing: `profiorientation.uz`
+2. `https://profiorientation.uz/auth/register` sahifasiga kiring
 3. Telegram tugmasini bosing
 4. Telegram Login Widget ishlashi kerak
 

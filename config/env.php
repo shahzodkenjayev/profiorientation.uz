@@ -72,5 +72,4 @@ if (file_exists($envFile)) {
         loadEnv($envFile);
     }
 }
-?>
 

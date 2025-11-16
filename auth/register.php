@@ -19,11 +19,23 @@ if (isset($_GET['error'])) {
         case 'invalid_data':
             $error = 'Noto\'g\'ri ma\'lumotlar!';
             break;
+        case 'google_auth_failed':
+            $error = 'Google autentifikatsiya xatosi!';
+            break;
+        case 'invalid_google_token':
+            $error = 'Noto\'g\'ri Google token!';
+            break;
+        case 'invalid_google_data':
+            $error = 'Noto\'g\'ri Google ma\'lumotlari!';
+            break;
     }
 }
 
 // Telegram orqali kelgan ma'lumotlarni tekshirish
 $telegram_mode = isset($_GET['telegram']) || isset($_SESSION['telegram_auth_data']);
+
+// Google orqali kelgan ma'lumotlarni tekshirish
+$google_mode = isset($_GET['google']) || isset($_SESSION['google_auth_data']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login_type = sanitize($_POST['login_type'] ?? '');
@@ -112,19 +124,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($login_type === 'telegram') {
                 $error = 'Telegram orqali avval autentifikatsiya qiling!';
             } elseif ($login_type === 'google') {
-                // Google OAuth orqali kelgan ma'lumotlar
-                $email = sanitize($_POST['email'] ?? '');
-                $google_id = sanitize($_POST['google_id'] ?? '');
-                
-                if (empty($google_id)) {
-                    $error = 'Google autentifikatsiya xatosi!';
+                // Google rejimida faqat class_number, school_name va exam_date kerak
+                if (isset($_SESSION['google_auth_data'])) {
+                    if (empty($class_number) || empty($school_name)) {
+                        $error = 'Barcha maydonlarni to\'ldiring!';
+                    } else {
+                        $google_data = $_SESSION['google_auth_data'];
+                        $google_id = $google_data['id'];
+                        $email = $google_data['email'] ?? '';
+                        $google_full_name = $_SESSION['google_full_name'] ?? $full_name;
+                        
+                        // Foydalanuvchini topish
+                        $stmt = $db->prepare("SELECT * FROM users WHERE google_id = ?");
+                        $stmt->execute([$google_id]);
+                        $existing_user = $stmt->fetch();
+                        
+                        if ($existing_user) {
+                            // Foydalanuvchi mavjud, login qilish
+                            $_SESSION['user_id'] = $existing_user['id'];
+                            unset($_SESSION['google_auth_data']);
+                            unset($_SESSION['google_full_name']);
+                            redirect(BASE_URL . 'payment/index.php');
+                        } else {
+                            // Yangi foydalanuvchi yaratish
+                            $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, class_number, school_name, login_type, exam_date) 
+                                                 VALUES (?, ?, ?, ?, ?, 'google', ?)");
+                            $stmt->execute([$google_id, $email, $google_full_name, $class_number, $school_name, $exam_date]);
+                            
+                            $_SESSION['user_id'] = $db->lastInsertId();
+                            unset($_SESSION['google_auth_data']);
+                            unset($_SESSION['google_full_name']);
+                            redirect(BASE_URL . 'payment/index.php');
+                        }
+                    }
                 } else {
-                    $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, class_number, school_name, login_type, exam_date) 
-                                         VALUES (?, ?, ?, ?, ?, 'google', ?)");
-                    $stmt->execute([$google_id, $email, $full_name, $class_number, $school_name, $exam_date]);
-                    
-                    $_SESSION['user_id'] = $db->lastInsertId();
-                    redirect(BASE_URL . 'payment/index.php');
+                    $error = 'Google orqali avval autentifikatsiya qiling!';
                 }
             }
         } catch (PDOException $e) {
@@ -220,7 +254,7 @@ $exam_dates = $stmt->fetchAll();
                             <p id="telegram-user-name"></p>
                         </div>
                         <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 12px; color: #856404;">
-                            <strong>Eslatma:</strong> Agar "Bot domain invalid" xatosi chiqsa, BotFather orqali bot sozlamalarida domain qo'shing: <code>localhost</code> yoki <code>localhost/ptest</code>
+                            <strong>Eslatma:</strong> Agar "Bot domain invalid" xatosi chiqsa, BotFather orqali bot sozlamalarida domain qo'shing: <code>profiorientation.uz</code>
                         </div>
                     </div>
                 </div>
@@ -228,21 +262,40 @@ $exam_dates = $stmt->fetchAll();
                 <!-- Google login -->
                 <div id="google-section" class="login-section" style="display:none;">
                     <div class="form-group">
-                        <button type="button" id="google-login-btn" class="btn-google">
-                            🔵 Google orqali kirish
-                        </button>
+                        <p style="text-align: center; margin-bottom: 20px; color: #666;">
+                            Google orqali kirish uchun quyidagi tugmani bosing:
+                        </p>
+                        <div style="text-align: center; margin: 20px 0;">
+                            <div id="g_id_onload"
+                                 data-client_id="<?= GOOGLE_CLIENT_ID ?>"
+                                 data-callback="onGoogleSignIn"
+                                 data-auto_prompt="false">
+                            </div>
+                            <div class="g_id_signin"
+                                 data-type="standard"
+                                 data-size="large"
+                                 data-theme="outline"
+                                 data-text="sign_in_with"
+                                 data-shape="rectangular"
+                                 data-logo_alignment="left">
+                            </div>
+                        </div>
                         <input type="hidden" name="google_id" id="google_id">
                         <input type="hidden" name="email" id="google_email">
+                        <div id="google-user-info" style="display:none; margin-top: 15px; padding: 15px; background: #f0f0f0; border-radius: 8px;">
+                            <p><strong>Google orqali kirildi!</strong></p>
+                            <p id="google-user-name"></p>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- Common fields - Telegram rejimida yashiriladi -->
+                <!-- Common fields - Telegram va Google rejimida yashiriladi -->
                 <div id="common-fields">
                     <div class="form-group" id="full-name-group">
                         <label>To'liq ism</label>
                         <input type="text" name="full_name" id="full_name_input" 
-                               value="<?= htmlspecialchars($_SESSION['telegram_full_name'] ?? '') ?>" 
-                               <?= $telegram_mode ? 'readonly' : 'required' ?>>
+                               value="<?= htmlspecialchars(($_SESSION['telegram_full_name'] ?? $_SESSION['google_full_name'] ?? '')) ?>" 
+                               <?= ($telegram_mode || $google_mode) ? 'readonly' : 'required' ?>>
                     </div>
                     
                     <div class="form-group">
@@ -276,7 +329,7 @@ $exam_dates = $stmt->fetchAll();
                 <button type="submit" class="btn-primary">Ro'yxatdan o'tish</button>
             </form>
             
-            <p class="text-center">
+            <p class="text-center" id="login-link" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">
                 Allaqachon ro'yxatdan o'tganmisiz? <a href="login.php">Kirish</a>
             </p>
         </div>
@@ -294,9 +347,28 @@ $exam_dates = $stmt->fetchAll();
             window.location.href = callbackUrl + '?' + params.toString();
         }
         
-        // Telegram rejimida common fields yashirish
+        // Google Sign-In callback
+        function onGoogleSignIn(response) {
+            // JWT credential'ni serverga yuborish
+            const credential = response.credential;
+            const callbackUrl = '<?= BASE_URL ?>auth/google_callback.php';
+            window.location.href = callbackUrl + '?credential=' + encodeURIComponent(credential);
+        }
+        
+        // Google Identity Services'ni initialize qilish
+        window.addEventListener('load', function() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: '<?= GOOGLE_CLIENT_ID ?>',
+                    callback: onGoogleSignIn
+                });
+            }
+        });
+        
+        // Telegram va Google rejimida common fields yashirish
         document.addEventListener('DOMContentLoaded', function() {
             const telegramMode = <?= $telegram_mode ? 'true' : 'false' ?>;
+            const googleMode = <?= $google_mode ? 'true' : 'false' ?>;
             const loginTypeInput = document.getElementById('login_type');
             
             if (telegramMode) {
@@ -306,11 +378,28 @@ $exam_dates = $stmt->fetchAll();
                 document.getElementById('telegram-section').style.display = 'block';
                 document.getElementById('google-section').style.display = 'none';
                 document.getElementById('full-name-group').style.display = 'none';
+                document.getElementById('login-link').style.display = 'none';
                 
                 // Login type selector buttonlarni yangilash
                 document.querySelectorAll('.login-btn').forEach(btn => {
                     btn.classList.remove('active');
                     if (btn.dataset.type === 'telegram') {
+                        btn.classList.add('active');
+                    }
+                });
+            } else if (googleMode) {
+                // Google rejimida
+                loginTypeInput.value = 'google';
+                document.getElementById('phone-section').style.display = 'none';
+                document.getElementById('telegram-section').style.display = 'none';
+                document.getElementById('google-section').style.display = 'block';
+                document.getElementById('full-name-group').style.display = 'block';
+                document.getElementById('login-link').style.display = 'none';
+                
+                // Login type selector buttonlarni yangilash
+                document.querySelectorAll('.login-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.type === 'google') {
                         btn.classList.add('active');
                     }
                 });
