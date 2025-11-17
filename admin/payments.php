@@ -7,14 +7,43 @@ $db = getDB();
 $success = '';
 $error = '';
 
-// Naqt to'lovni tasdiqlash
+// To'lovni tasdiqlash (barcha usullar uchun)
 if (isset($_GET['action']) && $_GET['action'] === 'approve' && isset($_GET['id'])) {
     $payment_id = intval($_GET['id']);
     
     try {
-        $stmt = $db->prepare("UPDATE payments SET payment_status = 'completed', paid_at = NOW() WHERE id = ? AND payment_method = 'cash'");
+        // To'lov ma'lumotlarini olish
+        $stmt = $db->prepare("SELECT * FROM payments WHERE id = ?");
         $stmt->execute([$payment_id]);
-        $success = 'To\'lov tasdiqlandi!';
+        $payment = $stmt->fetch();
+        
+        if (!$payment) {
+            $error = 'To\'lov topilmadi!';
+        } elseif ($payment['payment_status'] === 'completed') {
+            $error = 'To\'lov allaqachon tasdiqlangan!';
+        } else {
+            // To'lovni tasdiqlash
+            $stmt = $db->prepare("UPDATE payments SET payment_status = 'completed', paid_at = NOW() WHERE id = ?");
+            $stmt->execute([$payment_id]);
+            
+            // Agar foydalanuvchi to'lov qilgan bo'lsa, testga kirish huquqini berish
+            $stmt = $db->prepare("SELECT * FROM users WHERE id = ?");
+            $stmt->execute([$payment['user_id']]);
+            $user = $stmt->fetch();
+            
+            if ($user && !$user['test_completed']) {
+                // Foydalanuvchi testni boshlash huquqiga ega bo'ladi
+                // (Bu avtomatik test/start.php da tekshiriladi)
+            }
+            
+            $payment_method_name = [
+                'payme' => 'Payme',
+                'click' => 'Click',
+                'cash' => 'Naqt'
+            ];
+            $method = $payment_method_name[$payment['payment_method']] ?? $payment['payment_method'];
+            $success = $method . ' to\'lovi tasdiqlandi!';
+        }
     } catch (PDOException $e) {
         $error = 'Xatolik: ' . $e->getMessage();
     }
@@ -83,6 +112,7 @@ $stats = $stmt->fetch();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>To'lovlar - Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="<?= ASSETS_PATH ?>css/style.css">
     <link rel="stylesheet" href="<?= ASSETS_PATH ?>css/admin.css">
 </head>
@@ -200,15 +230,36 @@ $stats = $stmt->fetch();
                                 </td>
                                 <td><?= date('d.m.Y H:i', strtotime($payment['created_at'])) ?></td>
                                 <td>
-                                    <?php if ($payment['payment_method'] === 'cash' && $payment['payment_status'] === 'pending'): ?>
+                                    <?php if ($payment['payment_status'] === 'pending'): ?>
                                         <a href="?action=approve&id=<?= $payment['id'] ?>" 
                                            class="btn-small btn-success"
-                                           onclick="return confirm('To\'lovni tasdiqlaysizmi?')">Tasdiqlash</a>
-                                    <?php endif; ?>
-                                    <?php if ($payment['payment_status'] === 'pending'): ?>
+                                           onclick="return confirm('<?= $payment['payment_method'] === 'cash' ? 'Naqt' : ($payment['payment_method'] === 'payme' ? 'Payme' : 'Click') ?> to\'lovni tasdiqlaysizmi?')">
+                                            <i class="ri-check-line"></i> Tasdiqlash
+                                        </a>
                                         <a href="?action=cancel&id=<?= $payment['id'] ?>" 
                                            class="btn-small btn-danger"
-                                           onclick="return confirm('To\'lovni bekor qilishni tasdiqlaysizmi?')">Bekor qilish</a>
+                                           onclick="return confirm('To\'lovni bekor qilishni tasdiqlaysizmi?')">
+                                            <i class="ri-close-line"></i> Bekor qilish
+                                        </a>
+                                    <?php elseif ($payment['payment_status'] === 'completed'): ?>
+                                        <span class="badge success">
+                                            <i class="ri-checkbox-circle-line"></i> Tasdiqlangan
+                                        </span>
+                                    <?php elseif ($payment['payment_status'] === 'failed'): ?>
+                                        <span class="badge error">
+                                            <i class="ri-error-warning-line"></i> Muvaffaqiyatsiz
+                                        </span>
+                                    <?php elseif ($payment['payment_status'] === 'cancelled'): ?>
+                                        <span class="badge error">
+                                            <i class="ri-close-circle-line"></i> Bekor qilingan
+                                        </span>
+                                    <?php endif; ?>
+                                    
+                                    <?php if ($payment['payment_method'] === 'payme' || $payment['payment_method'] === 'click'): ?>
+                                        <small class="text-muted" style="display: block; margin-top: 4px; font-size: 11px;">
+                                            <i class="ri-information-line"></i> 
+                                            <?= $payment['payment_method'] === 'payme' ? 'Payme' : 'Click' ?> to'lovlari odatda avtomatik tasdiqlanadi
+                                        </small>
                                     <?php endif; ?>
                                 </td>
                             </tr>
