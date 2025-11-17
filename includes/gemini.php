@@ -4,8 +4,9 @@
 
 class GeminiAI {
     private $api_key;
-    private $api_model = 'gemini-1.5-flash'; // Yangi model nomi
-    private $api_base_url = 'https://generativelanguage.googleapis.com/v1beta/models/';
+    private $api_model = 'gemini-pro'; // Model nomi
+    private $api_version = 'v1'; // API versiyasi (v1beta o'rniga v1)
+    private $api_base_url = 'https://generativelanguage.googleapis.com/';
     
     public function __construct($api_key = null) {
         $this->api_key = $api_key ?? env('GEMINI_API_KEY', '');
@@ -19,7 +20,8 @@ class GeminiAI {
      * Gemini AI ga so'rov yuborish
      */
     private function makeRequest($prompt, $temperature = 0.7, $maxTokens = 2000) {
-        $url = $this->api_base_url . $this->api_model . ':generateContent?key=' . $this->api_key;
+        // v1 versiyasida URL format: v1/models/{model}:generateContent
+        $url = $this->api_base_url . $this->api_version . '/models/' . $this->api_model . ':generateContent?key=' . $this->api_key;
         
         $data = [
             'contents' => [
@@ -52,14 +54,29 @@ class GeminiAI {
         
         if ($http_code !== 200) {
             $error_data = json_decode($response, true);
-            throw new Exception('Gemini API xatosi: ' . ($error_data['error']['message'] ?? 'Noma\'lum xatolik'));
+            $error_message = $error_data['error']['message'] ?? 'Noma\'lum xatolik';
+            
+            // Agar model topilmasa, alternativ modellarni sinab ko'rish
+            if (strpos($error_message, 'not found') !== false || strpos($error_message, 'not supported') !== false) {
+                // Alternativ modellarni sinab ko'rish
+                return $this->tryAlternativeModels($prompt, $temperature, $maxTokens);
+            }
+            
+            throw new Exception('Gemini API xatosi: ' . $error_message);
         }
         
         $result = json_decode($response, true);
         
         // Xatolikni tekshirish
         if (isset($result['error'])) {
-            throw new Exception('Gemini API xatosi: ' . ($result['error']['message'] ?? 'Noma\'lum xatolik'));
+            $error_message = $result['error']['message'] ?? 'Noma\'lum xatolik';
+            
+            // Agar model topilmasa, alternativ modellarni sinab ko'rish
+            if (strpos($error_message, 'not found') !== false || strpos($error_message, 'not supported') !== false) {
+                return $this->tryAlternativeModels($prompt, $temperature, $maxTokens);
+            }
+            
+            throw new Exception('Gemini API xatosi: ' . $error_message);
         }
         
         if (!isset($result['candidates'][0]['content']['parts'][0]['text'])) {
