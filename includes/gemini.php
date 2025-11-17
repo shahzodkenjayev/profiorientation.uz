@@ -25,14 +25,76 @@ class GeminiAI {
     }
     
     /**
+     * Mavjud modellarni olish
+     */
+    public function listAvailableModels() {
+        $url = $this->api_base_url . $this->api_version . '/models?key=' . urlencode($this->api_key);
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'Content-Type: application/json'
+        ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+        
+        $response = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+        
+        if ($http_code === 200) {
+            $result = json_decode($response, true);
+            if (isset($result['models'])) {
+                return $result['models'];
+            }
+        }
+        
+        return [];
+    }
+    
+    /**
      * API Key ni test qilish
      */
     public function testApiKey() {
         try {
-            // Oddiy test so'rovi
-            $test_prompt = "Test";
-            $result = $this->makeRequest($test_prompt, 0.7, 10);
-            return ['success' => true, 'message' => 'API Key ishlayapti!'];
+            // Avval mavjud modellarni ko'rish
+            $models = $this->listAvailableModels();
+            
+            if (empty($models)) {
+                // Agar ListModels ishlamasa, to'g'ridan-to'g'ri test qilish
+                $test_prompt = "Test";
+                $result = $this->makeRequest($test_prompt, 0.7, 10);
+                return ['success' => true, 'message' => 'API Key ishlayapti!'];
+            }
+            
+            // Mavjud modellardan birini topish
+            $available_models = [];
+            foreach ($models as $model) {
+                $model_name = $model['name'] ?? '';
+                if (strpos($model_name, 'gemini') !== false) {
+                    // generateContent metodini qo'llab-quvvatlaydimi?
+                    $supported_methods = $model['supportedGenerationMethods'] ?? [];
+                    if (in_array('generateContent', $supported_methods)) {
+                        $available_models[] = str_replace('models/', '', $model_name);
+                    }
+                }
+            }
+            
+            if (!empty($available_models)) {
+                // Birinchi mavjud modelni ishlatish
+                $this->api_model = $available_models[0];
+                $test_prompt = "Test";
+                $result = $this->makeRequest($test_prompt, 0.7, 10);
+                return [
+                    'success' => true, 
+                    'message' => 'API Key ishlayapti!',
+                    'available_models' => $available_models,
+                    'using_model' => $this->api_model
+                ];
+            }
+            
+            return ['success' => false, 'message' => 'Mavjud modellar topilmadi'];
         } catch (Exception $e) {
             return ['success' => false, 'message' => $e->getMessage()];
         }
@@ -140,7 +202,34 @@ class GeminiAI {
      * Alternativ modellarni sinab ko'rish
      */
     private function tryAlternativeModels($prompt, $temperature = 0.7, $maxTokens = 2000) {
-        // Sinab ko'riladigan alternativ modellar va versiyalar
+        // Avval mavjud modellarni olish
+        try {
+            $available_models = $this->listAvailableModels();
+            if (!empty($available_models)) {
+                $model_configs = [];
+                foreach ($available_models as $model) {
+                    $model_name = $model['name'] ?? '';
+                    if (strpos($model_name, 'gemini') !== false) {
+                        $supported_methods = $model['supportedGenerationMethods'] ?? [];
+                        if (in_array('generateContent', $supported_methods)) {
+                            $short_name = str_replace('models/', '', $model_name);
+                            // Versiyani aniqlash
+                            $version = (strpos($model_name, 'v1beta') !== false) ? 'v1beta' : 'v1';
+                            $model_configs[] = ['version' => $version, 'model' => $short_name];
+                        }
+                    }
+                }
+                
+                if (!empty($model_configs)) {
+                    // Mavjud modellarni sinab ko'rish
+                    return $this->tryModelConfigs($prompt, $temperature, $maxTokens, $model_configs);
+                }
+            }
+        } catch (Exception $e) {
+            // ListModels ishlamasa, oddiy ro'yxatdan foydalanish
+        }
+        
+        // Sinab ko'riladigan alternativ modellar va versiyalar (fallback)
         $alternative_configs = [
             ['version' => 'v1beta', 'model' => 'gemini-1.5-flash'],
             ['version' => 'v1beta', 'model' => 'gemini-1.5-pro'],
@@ -148,6 +237,14 @@ class GeminiAI {
             ['version' => 'v1', 'model' => 'gemini-pro'],
             ['version' => 'v1beta', 'model' => 'gemini-pro'],
         ];
+        
+        return $this->tryModelConfigs($prompt, $temperature, $maxTokens, $alternative_configs);
+    }
+    
+    /**
+     * Model konfiguratsiyalarini sinab ko'rish
+     */
+    private function tryModelConfigs($prompt, $temperature, $maxTokens, $configs) {
         
         foreach ($alternative_configs as $config) {
             try {
