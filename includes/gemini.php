@@ -91,6 +91,73 @@ class GeminiAI {
     }
     
     /**
+     * Alternativ modellarni sinab ko'rish
+     */
+    private function tryAlternativeModels($prompt, $temperature = 0.7, $maxTokens = 2000) {
+        // Sinab ko'riladigan alternativ modellar
+        $alternative_models = [
+            'gemini-1.5-pro',
+            'gemini-1.5-flash-002',
+            'gemini-1.5-flash',
+            'gemini-pro',
+            'gemini-2.0-flash-exp'
+        ];
+        
+        foreach ($alternative_models as $model) {
+            try {
+                $old_model = $this->api_model;
+                $this->api_model = $model;
+                
+                $url = $this->api_base_url . $this->api_version . '/models/' . $this->api_model . ':generateContent?key=' . $this->api_key;
+                
+                $data = [
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => $temperature,
+                        'maxOutputTokens' => $maxTokens,
+                        'topP' => 0.8,
+                        'topK' => 40
+                    ]
+                ];
+                
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                    'Content-Type: application/json'
+                ]);
+                
+                $response = curl_exec($ch);
+                $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+                
+                if ($http_code === 200) {
+                    $result = json_decode($response, true);
+                    if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
+                        // Model topildi, keyingi safar shu modeldan foydalanish
+                        error_log("Gemini API: {$model} modeli muvaffaqiyatli ishlatildi");
+                        return $result['candidates'][0]['content']['parts'][0]['text'];
+                    }
+                }
+            } catch (Exception $e) {
+                // Keyingi modelni sinab ko'rish
+                continue;
+            }
+        }
+        
+        // Barcha modellar sinab ko'rilgan, xatolik
+        throw new Exception('Gemini API: Barcha modellar sinab ko\'rildi, hech biri ishlamadi. API Key ni tekshiring.');
+    }
+    
+    /**
      * Test savolini generatsiya qilish
      */
     public function generateQuestion($category, $language = 'uz', $context = '') {
