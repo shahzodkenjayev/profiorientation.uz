@@ -2,6 +2,7 @@
 .env
 config/env.php
 create_hash.php
+test_gemini_api.php
 
 
 # Logs
