@@ -49,6 +49,15 @@ if (empty($questions)) {
     die("Xatolik: Test savollari topilmadi! Iltimos, admin panel orqali savollar qo'shing.");
 }
 
+// Debug: Savollar va javob variantlarini tekshirish
+if (defined('APP_DEBUG') && APP_DEBUG) {
+    error_log("Test start: Found " . count($questions) . " questions");
+    error_log("Test start: Found " . count($all_options) . " answer options");
+    foreach ($options_by_question as $q_id => $opts) {
+        error_log("Question ID $q_id has " . count($opts) . " options");
+    }
+}
+
 // Kategoriyalar bo'yicha guruhlash
 $questions_by_category = [];
 foreach ($questions as $q) {
@@ -77,6 +86,18 @@ if (!empty($question_ids)) {
 $options_by_question = [];
 foreach ($all_options as $opt) {
     $options_by_question[$opt['question_id']][] = $opt;
+}
+
+// Debug: Savollar va javob variantlarini tekshirish
+if (defined('APP_DEBUG') && APP_DEBUG) {
+    error_log("Test start: Found " . count($questions) . " questions");
+    error_log("Test start: Found " . count($all_options) . " answer options");
+    foreach ($options_by_question as $q_id => $opts) {
+        error_log("Question ID $q_id has " . count($opts) . " options");
+    }
+    if (empty($all_options)) {
+        error_log("WARNING: No answer options found! Check database.");
+    }
 }
 ?>
 <!DOCTYPE html>

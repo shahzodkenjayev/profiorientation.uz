@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $question_id = str_replace('question_', '', $key);
                 $answer_option_id = intval($value);
                 
-                // Javobni saqlash
-                $stmt = $db->prepare("INSERT INTO user_answers (user_id, question_id, answer_option_id) 
+                // Javobni saqlash (answer_id maydoni ishlatiladi)
+                $stmt = $db->prepare("INSERT INTO user_answers (user_id, question_id, answer_id) 
                                      VALUES (?, ?, ?)");
                 $stmt->execute([$_SESSION['user_id'], $question_id, $answer_option_id]);
                 
