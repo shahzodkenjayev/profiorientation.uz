@@ -283,7 +283,7 @@ $exam_dates = $stmt->fetchAll();
                 </div>
                 
                 <!-- Common fields - Telegram va Google rejimida yashiriladi -->
-                <div id="common-fields" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">
+                <div id="common-fields" style="<?= ($telegram_mode || $google_mode) ? 'display:none !important;' : '' ?>">
                     <div class="form-group" id="full-name-group">
                         <label>To'liq ism</label>
                         <input type="text" name="full_name" id="full_name_input" 
@@ -291,7 +291,7 @@ $exam_dates = $stmt->fetchAll();
                                required>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="class-number-group">
                         <label>Sinf</label>
                         <select name="class_number" required>
                             <option value="">Tanlang</option>
@@ -300,12 +300,12 @@ $exam_dates = $stmt->fetchAll();
                         </select>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="school-name-group">
                         <label>Maktab nomi</label>
                         <input type="text" name="school_name" required>
                     </div>
                     
-                    <div class="form-group">
+                    <div class="form-group" id="exam-date-group">
                         <label>Imtihon sanasi</label>
                         <select name="exam_date" required>
                             <option value="">Tanlang</option>
@@ -331,6 +331,17 @@ $exam_dates = $stmt->fetchAll();
     <input type="hidden" id="google_client_id" value="<?= GOOGLE_CLIENT_ID ?>">
     <script src="<?= ASSETS_PATH ?>js/register.js"></script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        /* Telegram va Google rejimida common fields yashirish */
+        <?php if ($telegram_mode || $google_mode): ?>
+        #common-fields {
+            display: none !important;
+        }
+        #submit-btn {
+            display: none !important;
+        }
+        <?php endif; ?>
+    </style>
     <script>
         // Telegram Login Widget callback
         function onTelegramAuth(user) {
