@@ -19,6 +19,23 @@ class GeminiAI {
         if (strlen($this->api_key) < 20) {
             throw new Exception('GEMINI_API_KEY noto\'g\'ri formatda! API Key kamida 20 belgidan iborat bo\'lishi kerak.');
         }
+        
+        // API Key ni tozalash (bo'sh joylar, yangi qatorlar)
+        $this->api_key = trim($this->api_key);
+    }
+    
+    /**
+     * API Key ni test qilish
+     */
+    public function testApiKey() {
+        try {
+            // Oddiy test so'rovi
+            $test_prompt = "Test";
+            $result = $this->makeRequest($test_prompt, 0.7, 10);
+            return ['success' => true, 'message' => 'API Key ishlayapti!'];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => $e->getMessage()];
+        }
     }
     
     /**
@@ -200,8 +217,14 @@ class GeminiAI {
         foreach ($alternative_configs as $config) {
             $error_details .= "- {$config['version']}/{$config['model']}\n";
         }
-        $error_details .= "\nAPI Key ni tekshiring: https://aistudio.google.com/app/apikey\n";
-        $error_details .= "API Key to'g'ri ekanligini va faol ekanligini tekshiring.";
+        $error_details .= "\nMuammo: API Key ishlamayapti yoki noto'g'ri.\n\n";
+        $error_details .= "Qanday tuzatish:\n";
+        $error_details .= "1. https://aistudio.google.com/app/apikey ga o'ting\n";
+        $error_details .= "2. Yangi API Key yarating (Create API Key)\n";
+        $error_details .= "3. API Key ni nusxalang\n";
+        $error_details .= "4. .env faylga qo'shing: GEMINI_API_KEY=your_api_key_here\n";
+        $error_details .= "5. Server ni qayta ishga tushiring\n\n";
+        $error_details .= "Eslatma: API Key 180 kun ishlatilmasa, avtomatik o'chadi. Yangi API Key yarating!";
         
         throw new Exception('Gemini API: ' . $error_details);
     }

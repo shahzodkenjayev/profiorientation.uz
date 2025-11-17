@@ -20,19 +20,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['generate_ai'])) {
     } else {
         try {
             $gemini = new GeminiAI();
-            $result = $gemini->generateFullQuestion($category, $language, $order_number);
             
-            // Formani to'ldirish uchun JavaScript ga yuborish
-            $success = 'Savol generatsiya qilindi!';
-            $_SESSION['generated_question'] = [
-                'category' => $category,
-                'question_text' => $result['question_text'],
-                'options' => $result['options'],
-                'language' => $language,
-                'order_number' => $order_number
-            ];
+            // API Key ni test qilish
+            $test_result = $gemini->testApiKey();
+            if (!$test_result['success']) {
+                $error = 'API Key xatosi: ' . $test_result['message'];
+            } else {
+                $result = $gemini->generateFullQuestion($category, $language, $order_number);
+                
+                // Formani to'ldirish uchun JavaScript ga yuborish
+                $success = 'Savol generatsiya qilindi!';
+                $_SESSION['generated_question'] = [
+                    'category' => $category,
+                    'question_text' => $result['question_text'],
+                    'options' => $result['options'],
+                    'language' => $language,
+                    'order_number' => $order_number
+                ];
+            }
         } catch (Exception $e) {
             $error = 'AI xatosi: ' . $e->getMessage();
+            
+            // Agar API Key muammosi bo'lsa, batafsil ko'rsatish
+            if (strpos($e->getMessage(), 'API Key') !== false || strpos($e->getMessage(), 'Barcha modellar') !== false) {
+                $error .= "\n\n<b>Qanday tuzatish:</b>\n";
+                $error .= "1. https://aistudio.google.com/app/apikey ga o'ting\n";
+                $error .= "2. Yangi API Key yarating\n";
+                $error .= "3. .env faylga qo'shing: GEMINI_API_KEY=your_api_key\n";
+                $error .= "4. Server ni qayta ishga tushiring";
+            }
         }
     }
 }
