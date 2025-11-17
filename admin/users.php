@@ -70,8 +70,6 @@ $users = $stmt->fetchAll();
                         <tr>
                             <th>ID</th>
                             <th>Ism</th>
-                            <th>Sinf</th>
-                            <th>Maktab</th>
                             <th>Kirish turi</th>
                             <th>Imtihon sanasi</th>
                             <th>Test</th>
@@ -83,9 +81,7 @@ $users = $stmt->fetchAll();
                         <?php foreach ($users as $user): ?>
                             <tr>
                                 <td><?= $user['id'] ?></td>
-                                <td><?= htmlspecialchars($user['full_name']) ?></td>
-                                <td><?= $user['class_number'] ?>-sinf</td>
-                                <td><?= htmlspecialchars($user['school_name']) ?></td>
+                                <td><?= htmlspecialchars($user['full_name'] ?? '') ?></td>
                                 <td>
                                     <?php
                                     $login_types = [
