@@ -49,15 +49,6 @@ if (empty($questions)) {
     die("Xatolik: Test savollari topilmadi! Iltimos, admin panel orqali savollar qo'shing.");
 }
 
-// Debug: Savollar va javob variantlarini tekshirish
-if (defined('APP_DEBUG') && APP_DEBUG) {
-    error_log("Test start: Found " . count($questions) . " questions");
-    error_log("Test start: Found " . count($all_options) . " answer options");
-    foreach ($options_by_question as $q_id => $opts) {
-        error_log("Question ID $q_id has " . count($opts) . " options");
-    }
-}
-
 // Kategoriyalar bo'yicha guruhlash
 $questions_by_category = [];
 foreach ($questions as $q) {
@@ -124,18 +115,17 @@ if (defined('APP_DEBUG') && APP_DEBUG) {
             <div class="test-container">
                 <?php 
                 $question_num = 1;
+                $total_questions = count($questions);
                 foreach ($questions_by_category as $category => $category_questions): 
                 ?>
-                    <div class="category-section" data-category="<?= $category ?>">
-                        <h2 class="category-title"><?= htmlspecialchars($category) ?></h2>
-                        
+                    <div class="category-section" data-category="<?= htmlspecialchars($category) ?>">
                         <?php foreach ($category_questions as $question): ?>
-                            <div class="question-block" data-question-id="<?= $question['id'] ?>" style="display: <?= $question_num === 1 ? 'block' : 'none' ?>;">
-                                <div class="question-number"><?= __('test.question') ?> <?= $question_num ?></div>
+                            <div class="question-block" data-question-id="<?= $question['id'] ?>" data-question-num="<?= $question_num ?>" style="display: <?= $question_num === 1 ? 'block' : 'none' ?>;">
+                                <div class="question-number"><?= __('test.question') ?> <?= $question_num ?> / <?= $total_questions ?></div>
                                 <div class="question-text"><?= htmlspecialchars($question['question_text']) ?></div>
                                 
                                 <div class="answer-options">
-                                    <?php if (isset($options_by_question[$question['id']])): ?>
+                                    <?php if (isset($options_by_question[$question['id']]) && !empty($options_by_question[$question['id']])): ?>
                                         <?php foreach ($options_by_question[$question['id']] as $option): ?>
                                             <label class="option-label">
                                                 <input type="radio" 
@@ -145,6 +135,10 @@ if (defined('APP_DEBUG') && APP_DEBUG) {
                                                 <span class="option-text"><?= htmlspecialchars($option['option_text']) ?></span>
                                             </label>
                                         <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="no-options" style="padding: 20px; background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; color: #856404; margin: 10px 0;">
+                                            <strong>⚠️ Eslatma:</strong> Bu savol uchun javob variantlari topilmadi. Iltimos, admin panel orqali javob variantlarini qo'shing.
+                                        </div>
                                     <?php endif; ?>
                                 </div>
                             </div>

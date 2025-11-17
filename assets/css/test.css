@@ -81,17 +81,18 @@ body {
 .question-block {
     margin-bottom: 40px;
     padding: 30px;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
-    border: 1px solid rgba(102, 126, 234, 0.2);
+    border: 1px solid rgba(102, 126, 234, 0.3);
     transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .question-block.active {
-    display: block;
-    background: rgba(255, 255, 255, 0.9);
-    border-color: rgba(102, 126, 234, 0.4);
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.1);
+    display: block !important;
+    background: rgba(255, 255, 255, 1);
+    border-color: rgba(102, 126, 234, 0.5);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
 }
 
 .question-number {
