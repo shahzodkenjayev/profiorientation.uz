@@ -4,7 +4,8 @@
 
 class GeminiAI {
     private $api_key;
-    private $api_url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
+    private $api_model = 'gemini-1.5-flash'; // Yangi model nomi
+    private $api_base_url = 'https://generativelanguage.googleapis.com/v1beta/models/';
     
     public function __construct($api_key = null) {
         $this->api_key = $api_key ?? env('GEMINI_API_KEY', '');
@@ -18,7 +19,7 @@ class GeminiAI {
      * Gemini AI ga so'rov yuborish
      */
     private function makeRequest($prompt, $temperature = 0.7, $maxTokens = 2000) {
-        $url = $this->api_url . '?key=' . $this->api_key;
+        $url = $this->api_base_url . $this->api_model . ':generateContent?key=' . $this->api_key;
         
         $data = [
             'contents' => [
@@ -56,8 +57,17 @@ class GeminiAI {
         
         $result = json_decode($response, true);
         
+        // Xatolikni tekshirish
+        if (isset($result['error'])) {
+            throw new Exception('Gemini API xatosi: ' . ($result['error']['message'] ?? 'Noma\'lum xatolik'));
+        }
+        
         if (!isset($result['candidates'][0]['content']['parts'][0]['text'])) {
-            throw new Exception('Gemini API dan javob olinmadi');
+            // Debug uchun to'liq javobni ko'rsatish
+            if (defined('APP_DEBUG') && APP_DEBUG) {
+                error_log('Gemini API javobi: ' . json_encode($result));
+            }
+            throw new Exception('Gemini API dan javob olinmadi. API javobi: ' . json_encode($result));
         }
         
         return $result['candidates'][0]['content']['parts'][0]['text'];
