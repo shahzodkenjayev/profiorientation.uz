@@ -744,6 +744,15 @@ body {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 30px;
+    }
+    
+    .footer-section {
+        text-align: center;
+    }
+    
     body {
         padding-top: 0;
     }
