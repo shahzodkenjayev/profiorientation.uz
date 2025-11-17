@@ -35,6 +35,14 @@ return [
         'cta_subtitle' => 'Yerinizi ayırtmak için aşağıdaki formu doldurun, biz sizinle iletişime geçeceğiz',
         'footer_text' => 'Prof Orientatsiya. Tüm hakları saklıdır.',
     ],
+    'footer' => [
+        'quick_links' => 'Hızlı Bağlantılar',
+        'home' => 'Ana Sayfa',
+        'about' => 'Hakkımızda',
+        'pricing' => 'Fiyatlandırma',
+        'contact' => 'İletişim',
+        'follow_us' => 'Bizi Takip Edin',
+    ],
     'nav' => [
         'register' => 'Kayıt Ol',
         'login' => 'Giriş',

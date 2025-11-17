@@ -35,6 +35,14 @@ return [
         'cta_subtitle' => 'Fill out the form below to reserve your place and we will contact you',
         'footer_text' => 'Prof Orientatsiya. All rights reserved.',
     ],
+    'footer' => [
+        'quick_links' => 'Quick Links',
+        'home' => 'Home',
+        'about' => 'About',
+        'pricing' => 'Pricing',
+        'contact' => 'Contact',
+        'follow_us' => 'Follow Us',
+    ],
     'nav' => [
         'register' => 'Register',
         'login' => 'Login',

@@ -35,6 +35,14 @@ return [
         'cta_subtitle' => 'O\'z joyingizni band qilish uchun quyidagi formani to\'ldiring va biz sizga aloqaga chiqamiz',
         'footer_text' => 'Prof Orientatsiya. Barcha huquqlar himoyalangan.',
     ],
+    'footer' => [
+        'quick_links' => 'Tezkor havolalar',
+        'home' => 'Bosh sahifa',
+        'about' => 'Biz haqimizda',
+        'pricing' => 'Narxlar',
+        'contact' => 'Aloqa',
+        'follow_us' => 'Bizni kuzatib boring',
+    ],
     'nav' => [
         'register' => 'Ro\'yxatdan o\'tish',
         'login' => 'Kirish',
