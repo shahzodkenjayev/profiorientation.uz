@@ -283,7 +283,8 @@ $exam_dates = $stmt->fetchAll();
                 </div>
                 
                 <!-- Common fields - Telegram va Google rejimida yashiriladi -->
-                <div id="common-fields" style="<?= ($telegram_mode || $google_mode) ? 'display:none !important;' : '' ?>">
+                <?php if (!$telegram_mode && !$google_mode): ?>
+                <div id="common-fields">
                     <div class="form-group" id="full-name-group">
                         <label>To'liq ism</label>
                         <input type="text" name="full_name" id="full_name_input" 
@@ -318,6 +319,7 @@ $exam_dates = $stmt->fetchAll();
                         </select>
                     </div>
                 </div>
+                <?php endif; ?>
                 
                 <button type="submit" class="btn-primary" id="submit-btn" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">Ro'yxatdan o'tish</button>
             </form>

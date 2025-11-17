@@ -93,14 +93,16 @@ if (isset($auth_data['id']) && isset($auth_data['hash'])) {
             if ($user['test_completed']) {
                 redirect(BASE_URL . 'results/view.php');
             } else {
-                redirect(BASE_URL . 'test/start.php');
+                redirect(BASE_URL . 'payment/index.php');
             }
         } else {
-            // Yangi foydalanuvchi, ma'lumotlarni session'ga saqlash va register sahifasiga yuborish
-            $_SESSION['telegram_auth_data'] = $auth_data;
-            $_SESSION['telegram_full_name'] = $full_name;
-            $_SESSION['telegram_username'] = $username;
-            redirect(BASE_URL . 'auth/register?telegram=1');
+            // Yangi foydalanuvchi yaratish - to'g'ridan-to'g'ri yaratib, payment sahifasiga o'tkazish
+            $stmt = $db->prepare("INSERT INTO users (telegram_id, full_name, login_type) 
+                                 VALUES (?, ?, 'telegram')");
+            $stmt->execute([$telegram_id, $full_name]);
+            
+            $_SESSION['user_id'] = $db->lastInsertId();
+            redirect(BASE_URL . 'payment/index.php');
         }
     } catch (PDOException $e) {
         redirect(BASE_URL . 'auth/register?error=db_error');
