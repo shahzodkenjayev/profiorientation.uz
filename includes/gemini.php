@@ -4,7 +4,7 @@
 
 class GeminiAI {
     private $api_key;
-    private $api_model = 'gemini-1.5-flash'; // Model nomi
+    private $api_model = 'gemini-2.5-flash'; // Model nomi (yangilangan - mavjud modellar ro'yxatidan)
     private $api_version = 'v1beta'; // API versiyasi
     private $api_base_url = 'https://generativelanguage.googleapis.com/';
     
@@ -82,8 +82,29 @@ class GeminiAI {
             }
             
             if (!empty($available_models)) {
-                // Birinchi mavjud modelni ishlatish
-                $this->api_model = $available_models[0];
+                // Eng yaxshi modelni tanlash (flash modellar tezroq)
+                $preferred_models = [
+                    'gemini-2.5-flash',
+                    'gemini-2.0-flash',
+                    'gemini-2.5-flash-lite',
+                    'gemini-2.0-flash-lite',
+                    'gemini-flash-latest'
+                ];
+                
+                $selected_model = null;
+                foreach ($preferred_models as $pref) {
+                    if (in_array($pref, $available_models)) {
+                        $selected_model = $pref;
+                        break;
+                    }
+                }
+                
+                // Agar preferred topilmasa, birinchi mavjud modelni ishlatish
+                if (!$selected_model) {
+                    $selected_model = $available_models[0];
+                }
+                
+                $this->api_model = $selected_model;
                 $test_prompt = "Test";
                 $result = $this->makeRequest($test_prompt, 0.7, 10);
                 return [
@@ -221,6 +242,10 @@ class GeminiAI {
                 }
                 
                 if (!empty($model_configs)) {
+                    // Priority bo'yicha tartiblash
+                    usort($model_configs, function($a, $b) {
+                        return $a['priority'] <=> $b['priority'];
+                    });
                     // Mavjud modellarni sinab ko'rish
                     return $this->tryModelConfigs($prompt, $temperature, $maxTokens, $model_configs);
                 }
@@ -231,11 +256,14 @@ class GeminiAI {
         
         // Sinab ko'riladigan alternativ modellar va versiyalar (fallback)
         $alternative_configs = [
-            ['version' => 'v1beta', 'model' => 'gemini-1.5-flash'],
-            ['version' => 'v1beta', 'model' => 'gemini-1.5-pro'],
-            ['version' => 'v1beta', 'model' => 'gemini-1.5-flash-002'],
-            ['version' => 'v1', 'model' => 'gemini-pro'],
-            ['version' => 'v1beta', 'model' => 'gemini-pro'],
+            ['version' => 'v1beta', 'model' => 'gemini-2.5-flash', 'priority' => 0],
+            ['version' => 'v1beta', 'model' => 'gemini-2.0-flash', 'priority' => 1],
+            ['version' => 'v1beta', 'model' => 'gemini-2.5-flash-lite', 'priority' => 2],
+            ['version' => 'v1beta', 'model' => 'gemini-2.0-flash-lite', 'priority' => 3],
+            ['version' => 'v1beta', 'model' => 'gemini-flash-latest', 'priority' => 4],
+            ['version' => 'v1beta', 'model' => 'gemini-1.5-flash', 'priority' => 5],
+            ['version' => 'v1beta', 'model' => 'gemini-1.5-pro', 'priority' => 6],
+            ['version' => 'v1', 'model' => 'gemini-pro', 'priority' => 7],
         ];
         
         return $this->tryModelConfigs($prompt, $temperature, $maxTokens, $alternative_configs);
