@@ -47,11 +47,8 @@ try {
     if ($user) {
         // Foydalanuvchi mavjud, login qilish
         $_SESSION['user_id'] = $user['id'];
-        $_SESSION['google_auth_data'] = [
-            'id' => $google_id,
-            'email' => $email,
-            'name' => $name
-        ];
+        unset($_SESSION['google_auth_data']);
+        unset($_SESSION['google_full_name']);
         
         if ($user['test_completed']) {
             redirect(BASE_URL . 'results/view.php');
@@ -71,11 +68,8 @@ try {
                 $stmt->execute([$google_id, $user_by_email['id']]);
                 
                 $_SESSION['user_id'] = $user_by_email['id'];
-                $_SESSION['google_auth_data'] = [
-                    'id' => $google_id,
-                    'email' => $email,
-                    'name' => $name
-                ];
+                unset($_SESSION['google_auth_data']);
+                unset($_SESSION['google_full_name']);
                 
                 if ($user_by_email['test_completed']) {
                     redirect(BASE_URL . 'results/view.php');
@@ -86,14 +80,19 @@ try {
             }
         }
         
-        // Yangi foydalanuvchi, ma'lumotlarni session'ga saqlash va register sahifasiga yuborish
-        $_SESSION['google_auth_data'] = [
-            'id' => $google_id,
-            'email' => $email,
-            'name' => $name
-        ];
-        $_SESSION['google_full_name'] = $full_name;
-        redirect(BASE_URL . 'auth/register?google=1');
+        // Yangi foydalanuvchi yaratish - to'g'ridan-to'g'ri yaratib, dashboard'ga o'tkazish
+        $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, login_type) 
+                             VALUES (?, ?, ?, 'google')");
+        $stmt->execute([
+            $google_id, 
+            $email ?: null, 
+            $full_name
+        ]);
+        
+        $_SESSION['user_id'] = $db->lastInsertId();
+        unset($_SESSION['google_auth_data']);
+        unset($_SESSION['google_full_name']);
+        redirect(BASE_URL . 'dashboard/index.php');
     }
 } catch (PDOException $e) {
     redirect(BASE_URL . 'auth/register?error=db_error');
