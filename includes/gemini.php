@@ -4,8 +4,8 @@
 
 class GeminiAI {
     private $api_key;
-    private $api_model = 'gemini-pro'; // Model nomi
-    private $api_version = 'v1'; // API versiyasi (v1beta o'rniga v1)
+    private $api_model = 'gemini-1.5-flash'; // Model nomi
+    private $api_version = 'v1beta'; // API versiyasi
     private $api_base_url = 'https://generativelanguage.googleapis.com/';
     
     public function __construct($api_key = null) {
@@ -14,14 +14,19 @@ class GeminiAI {
         if (empty($this->api_key)) {
             throw new Exception('GEMINI_API_KEY topilmadi! .env faylga qo\'shing.');
         }
+        
+        // API Key formatini tekshirish
+        if (strlen($this->api_key) < 20) {
+            throw new Exception('GEMINI_API_KEY noto\'g\'ri formatda! API Key kamida 20 belgidan iborat bo\'lishi kerak.');
+        }
     }
     
     /**
      * Gemini AI ga so'rov yuborish
      */
     private function makeRequest($prompt, $temperature = 0.7, $maxTokens = 2000) {
-        // v1 versiyasida URL format: v1/models/{model}:generateContent
-        $url = $this->api_base_url . $this->api_version . '/models/' . $this->api_model . ':generateContent?key=' . $this->api_key;
+        // v1beta versiyasida URL format: v1beta/models/{model}:generateContent
+        $url = $this->api_base_url . $this->api_version . '/models/' . $this->api_model . ':generateContent?key=' . urlencode($this->api_key);
         
         $data = [
             'contents' => [
@@ -47,22 +52,46 @@ class GeminiAI {
         curl_setopt($ch, CURLOPT_HTTPHEADER, [
             'Content-Type: application/json'
         ]);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
         
         $response = curl_exec($ch);
         $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curl_error = curl_error($ch);
         curl_close($ch);
+        
+        // CURL xatoliklarini tekshirish
+        if ($curl_error) {
+            throw new Exception('CURL xatosi: ' . $curl_error);
+        }
         
         if ($http_code !== 200) {
             $error_data = json_decode($response, true);
             $error_message = $error_data['error']['message'] ?? 'Noma\'lum xatolik';
+            $error_code = $error_data['error']['code'] ?? $http_code;
+            
+            // Debug uchun to'liq xatolik ma'lumotlari
+            if (defined('APP_DEBUG') && APP_DEBUG) {
+                error_log('Gemini API xatosi: HTTP ' . $http_code . ' - ' . $error_message);
+                error_log('API javobi: ' . $response);
+            }
+            
+            // API Key xatoliklari
+            if ($error_code == 401 || strpos($error_message, 'API key') !== false || strpos($error_message, 'invalid') !== false) {
+                throw new Exception('Gemini API Key noto\'g\'ri yoki amal qilish muddati tugagan! Iltimos, yangi API Key yarating: https://aistudio.google.com/app/apikey');
+            }
+            
+            // Quota xatoliklari
+            if ($error_code == 429 || strpos($error_message, 'quota') !== false || strpos($error_message, 'rate limit') !== false) {
+                throw new Exception('Gemini API limiti yetib borgan! Iltimos, keyinroq qayta urinib ko\'ring.');
+            }
             
             // Agar model topilmasa, alternativ modellarni sinab ko'rish
             if (strpos($error_message, 'not found') !== false || strpos($error_message, 'not supported') !== false) {
-                // Alternativ modellarni sinab ko'rish
                 return $this->tryAlternativeModels($prompt, $temperature, $maxTokens);
             }
             
-            throw new Exception('Gemini API xatosi: ' . $error_message);
+            throw new Exception('Gemini API xatosi (HTTP ' . $http_code . '): ' . $error_message);
         }
         
         $result = json_decode($response, true);
@@ -94,21 +123,24 @@ class GeminiAI {
      * Alternativ modellarni sinab ko'rish
      */
     private function tryAlternativeModels($prompt, $temperature = 0.7, $maxTokens = 2000) {
-        // Sinab ko'riladigan alternativ modellar
-        $alternative_models = [
-            'gemini-1.5-pro',
-            'gemini-1.5-flash-002',
-            'gemini-1.5-flash',
-            'gemini-pro',
-            'gemini-2.0-flash-exp'
+        // Sinab ko'riladigan alternativ modellar va versiyalar
+        $alternative_configs = [
+            ['version' => 'v1beta', 'model' => 'gemini-1.5-flash'],
+            ['version' => 'v1beta', 'model' => 'gemini-1.5-pro'],
+            ['version' => 'v1beta', 'model' => 'gemini-1.5-flash-002'],
+            ['version' => 'v1', 'model' => 'gemini-pro'],
+            ['version' => 'v1beta', 'model' => 'gemini-pro'],
         ];
         
-        foreach ($alternative_models as $model) {
+        foreach ($alternative_configs as $config) {
             try {
                 $old_model = $this->api_model;
-                $this->api_model = $model;
+                $old_version = $this->api_version;
                 
-                $url = $this->api_base_url . $this->api_version . '/models/' . $this->api_model . ':generateContent?key=' . $this->api_key;
+                $this->api_model = $config['model'];
+                $this->api_version = $config['version'];
+                
+                $url = $this->api_base_url . $this->api_version . '/models/' . $this->api_model . ':generateContent?key=' . urlencode($this->api_key);
                 
                 $data = [
                     'contents' => [
@@ -134,27 +166,44 @@ class GeminiAI {
                 curl_setopt($ch, CURLOPT_HTTPHEADER, [
                     'Content-Type: application/json'
                 ]);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_TIMEOUT, 30);
                 
                 $response = curl_exec($ch);
                 $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curl_error = curl_error($ch);
                 curl_close($ch);
+                
+                if ($curl_error) {
+                    continue; // Keyingi modelni sinab ko'rish
+                }
                 
                 if ($http_code === 200) {
                     $result = json_decode($response, true);
                     if (isset($result['candidates'][0]['content']['parts'][0]['text'])) {
                         // Model topildi, keyingi safar shu modeldan foydalanish
-                        error_log("Gemini API: {$model} modeli muvaffaqiyatli ishlatildi");
+                        error_log("Gemini API: {$config['version']}/{$config['model']} modeli muvaffaqiyatli ishlatildi");
                         return $result['candidates'][0]['content']['parts'][0]['text'];
                     }
                 }
             } catch (Exception $e) {
                 // Keyingi modelni sinab ko'rish
+                if (defined('APP_DEBUG') && APP_DEBUG) {
+                    error_log("Gemini API: {$config['version']}/{$config['model']} sinab ko'rilmoqda - xatolik: " . $e->getMessage());
+                }
                 continue;
             }
         }
         
         // Barcha modellar sinab ko'rilgan, xatolik
-        throw new Exception('Gemini API: Barcha modellar sinab ko\'rildi, hech biri ishlamadi. API Key ni tekshiring.');
+        $error_details = "Barcha modellar sinab ko'rildi:\n";
+        foreach ($alternative_configs as $config) {
+            $error_details .= "- {$config['version']}/{$config['model']}\n";
+        }
+        $error_details .= "\nAPI Key ni tekshiring: https://aistudio.google.com/app/apikey\n";
+        $error_details .= "API Key to'g'ri ekanligini va faol ekanligini tekshiring.";
+        
+        throw new Exception('Gemini API: ' . $error_details);
     }
     
     /**
