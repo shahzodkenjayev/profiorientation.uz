@@ -40,11 +40,9 @@ $google_mode = isset($_GET['google']) || isset($_SESSION['google_auth_data']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $login_type = sanitize($_POST['login_type'] ?? '');
     $full_name = sanitize($_POST['full_name'] ?? '');
-    $class_number = intval($_POST['class_number'] ?? 0);
-    $school_name = sanitize($_POST['school_name'] ?? '');
     $exam_date = sanitize($_POST['exam_date'] ?? '');
 
-    // Telegram rejimida - class_number, school_name va exam_date ixtiyoriy
+    // Telegram rejimida
     if ($login_type === 'telegram' && isset($_SESSION['telegram_auth_data'])) {
         try {
             $db = getDB();
@@ -70,14 +68,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     redirect(BASE_URL . 'dashboard/index.php');
                 }
             } else {
-                // Yangi foydalanuvchi yaratish - class_number, school_name va exam_date ixtiyoriy
-                $stmt = $db->prepare("INSERT INTO users (telegram_id, full_name, class_number, school_name, login_type, exam_date) 
-                                     VALUES (?, ?, ?, ?, 'telegram', ?)");
+                // Yangi foydalanuvchi yaratish
+                $stmt = $db->prepare("INSERT INTO users (telegram_id, full_name, login_type, exam_date) 
+                                     VALUES (?, ?, 'telegram', ?)");
                 $stmt->execute([
                     $telegram_id, 
                     $telegram_full_name, 
-                    $class_number ?: null, 
-                    $school_name ?: null, 
                     $exam_date ?: null
                 ]);
                 
@@ -89,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } catch (PDOException $e) {
             $error = 'Xatolik yuz berdi: ' . $e->getMessage();
         }
-    } elseif (empty($full_name) || empty($class_number) || empty($school_name)) {
+    } elseif (empty($full_name)) {
         $error = 'Barcha maydonlarni to\'ldiring!';
     } else {
         try {
@@ -118,9 +114,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['phone_verification_number'] == $phone &&
                         (time() - $_SESSION['phone_verification_time']) < 300) {
                         
-                        $stmt = $db->prepare("INSERT INTO users (phone, full_name, class_number, school_name, login_type, exam_date) 
-                                             VALUES (?, ?, ?, ?, 'phone', ?)");
-                        $stmt->execute([$phone, $full_name, $class_number, $school_name, $exam_date]);
+                        $stmt = $db->prepare("INSERT INTO users (phone, full_name, login_type, exam_date) 
+                                             VALUES (?, ?, 'phone', ?)");
+                        $stmt->execute([$phone, $full_name, $exam_date]);
                         
                         $_SESSION['user_id'] = $db->lastInsertId();
                         unset($_SESSION['phone_verification_code']);
@@ -132,7 +128,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($login_type === 'telegram') {
                 $error = 'Telegram orqali avval autentifikatsiya qiling!';
             } elseif ($login_type === 'google') {
-                // Google rejimida - class_number, school_name va exam_date ixtiyoriy
+                // Google rejimida
                 if (isset($_SESSION['google_auth_data'])) {
                     $google_data = $_SESSION['google_auth_data'];
                     $google_id = $google_data['id'];
@@ -161,15 +157,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             redirect(BASE_URL . 'dashboard/index.php');
                         }
                     } else {
-                        // Yangi foydalanuvchi yaratish - class_number, school_name va exam_date ixtiyoriy
-                        $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, class_number, school_name, login_type, exam_date) 
-                                             VALUES (?, ?, ?, ?, ?, 'google', ?)");
+                        // Yangi foydalanuvchi yaratish
+                        $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, login_type, exam_date) 
+                                             VALUES (?, ?, ?, 'google', ?)");
                         $stmt->execute([
                             $google_id, 
                             $email, 
                             $google_full_name, 
-                            $class_number ?: null, 
-                            $school_name ?: null, 
                             $exam_date ?: null
                         ]);
                         
@@ -290,20 +284,6 @@ $exam_dates = $stmt->fetchAll();
                         <input type="text" name="full_name" id="full_name_input" 
                                value="<?= htmlspecialchars(($_SESSION['telegram_full_name'] ?? $_SESSION['google_full_name'] ?? '')) ?>" 
                                required>
-                    </div>
-                    
-                    <div class="form-group" id="class-number-group">
-                        <label>Sinf</label>
-                        <select name="class_number" required>
-                            <option value="">Tanlang</option>
-                            <option value="10">10-sinf</option>
-                            <option value="11">11-sinf</option>
-                        </select>
-                    </div>
-                    
-                    <div class="form-group" id="school-name-group">
-                        <label>Maktab nomi</label>
-                        <input type="text" name="school_name" required>
                     </div>
                     
                     <div class="form-group" id="exam-date-group">
