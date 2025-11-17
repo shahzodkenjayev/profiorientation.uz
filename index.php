@@ -270,37 +270,41 @@ $exam_dates = $stmt->fetchAll();
 
                 <!-- Telegram Login -->
                 <div id="telegramTab" class="tab-content">
-                    <div style="text-align: center; margin: 20px 0;">
-                        <script async src="https://telegram.org/js/telegram-widget.js?22" 
-                                data-telegram-login="<?= TELEGRAM_BOT_USERNAME ?>" 
-                                data-size="large" 
-                                data-onauth="onTelegramAuth(user)" 
-                                data-request-access="write"
-                                data-userpic="true"
-                                data-auth-url="<?= BASE_URL ?>auth/telegram_callback"></script>
+                    <div class="form-group">
+                        <div>
+                            <script async src="https://telegram.org/js/telegram-widget.js?22" 
+                                    data-telegram-login="<?= TELEGRAM_BOT_USERNAME ?>" 
+                                    data-size="large" 
+                                    data-onauth="onTelegramAuth(user)" 
+                                    data-request-access="write"
+                                    data-userpic="true"
+                                    data-auth-url="<?= BASE_URL ?>auth/telegram_callback"></script>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Google Login -->
                 <div id="googleTab" class="tab-content">
-                    <div style="text-align: center; margin: 20px 0;">
-                        <div id="g_id_onload"
-                             data-client_id="<?= GOOGLE_CLIENT_ID ?>"
-                             data-callback="onGoogleSignIn"
-                             data-auto_prompt="false">
-                        </div>
-                        <div class="g_id_signin"
-                             data-type="standard"
-                             data-size="large"
-                             data-theme="outline"
-                             data-text="sign_in_with"
-                             data-shape="rectangular"
-                             data-logo_alignment="left">
+                    <div class="form-group">
+                        <div>
+                            <div id="g_id_onload"
+                                 data-client_id="<?= GOOGLE_CLIENT_ID ?>"
+                                 data-callback="onGoogleSignIn"
+                                 data-auto_prompt="false">
+                            </div>
+                            <div class="g_id_signin"
+                                 data-type="standard"
+                                 data-size="large"
+                                 data-theme="outline"
+                                 data-text="sign_in_with"
+                                 data-shape="rectangular"
+                                 data-logo_alignment="left">
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div style="text-align: center; margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb;">
+                <div class="modal-register-link">
                     <a href="<?= BASE_URL ?>auth/register" class="btn-link"><?= __('nav.register') ?></a>
                 </div>
             </div>
@@ -337,11 +341,18 @@ $exam_dates = $stmt->fetchAll();
         function openModal() {
             loginModal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            // Smooth animation
+            setTimeout(() => {
+                loginModal.style.opacity = '1';
+            }, 10);
         }
 
         function closeModalFunc() {
-            loginModal.style.display = 'none';
-            document.body.style.overflow = 'auto';
+            loginModal.style.opacity = '0';
+            setTimeout(() => {
+                loginModal.style.display = 'none';
+                document.body.style.overflow = 'auto';
+            }, 300);
         }
 
         loginBtn?.addEventListener('click', openModal);
