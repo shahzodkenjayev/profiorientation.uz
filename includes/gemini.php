@@ -245,8 +245,7 @@ class GeminiAI {
      * Model konfiguratsiyalarini sinab ko'rish
      */
     private function tryModelConfigs($prompt, $temperature, $maxTokens, $configs) {
-        
-        foreach ($alternative_configs as $config) {
+        foreach ($configs as $config) {
             try {
                 $old_model = $this->api_model;
                 $old_version = $this->api_version;
