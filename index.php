@@ -552,14 +552,22 @@ if (isLoggedIn()) {
         // Telegram auth callback for modal
         function onTelegramAuthModal(user) {
             // Telegram Login Widget dan kelgan ma'lumotlarni to'g'ri formatda yuborish
-            const params = new URLSearchParams({
-                id: user.id,
-                first_name: user.first_name || '',
-                last_name: user.last_name || '',
-                username: user.username || '',
-                auth_date: user.auth_date,
-                hash: user.hash
-            });
+            // Eslatma: Telegram Login Widget ma'lumotlarni to'g'ridan-to'g'ri yuboradi
+            // Lekin biz JavaScript callback orqali qabul qilamiz
+            console.log('Telegram auth data:', user);
+            
+            // Ma'lumotlarni to'g'ri formatda yuborish
+            const params = new URLSearchParams();
+            
+            // Barcha mavjud maydonlarni qo'shish
+            if (user.id) params.append('id', user.id);
+            if (user.first_name) params.append('first_name', user.first_name);
+            if (user.last_name) params.append('last_name', user.last_name);
+            if (user.username) params.append('username', user.username);
+            if (user.photo_url) params.append('photo_url', user.photo_url);
+            if (user.auth_date) params.append('auth_date', user.auth_date);
+            if (user.hash) params.append('hash', user.hash);
+            
             window.location.href = '<?= BASE_URL ?>auth/telegram_callback?' + params.toString();
         }
         
