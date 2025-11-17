@@ -44,7 +44,7 @@ $recent_results = $stmt->fetchAll();
         <div class="admin-content">
             <div class="admin-header">
                 <h1>Dashboard</h1>
-                <p>Salom, <?= htmlspecialchars($_SESSION['admin_username']) ?>!</p>
+                <p>Salom, <?= htmlspecialchars($_SESSION['admin_username'] ?? 'Admin') ?>!</p>
             </div>
             
             <div class="stats-grid">
@@ -85,9 +85,9 @@ $recent_results = $stmt->fetchAll();
                         <tbody>
                             <?php foreach ($recent_users as $user): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($user['full_name']) ?></td>
-                                    <td><?= $user['class_number'] ?>-sinf</td>
-                                    <td><?= htmlspecialchars($user['school_name']) ?></td>
+                                    <td><?= htmlspecialchars($user['full_name'] ?? '') ?></td>
+                                    <td><?= $user['class_number'] ? $user['class_number'] . '-sinf' : '-' ?></td>
+                                    <td><?= htmlspecialchars($user['school_name'] ?? '') ?></td>
                                     <td>
                                         <?php if ($user['test_completed']): ?>
                                             <span class="badge success">Yakunlangan</span>
@@ -116,9 +116,9 @@ $recent_results = $stmt->fetchAll();
                         <tbody>
                             <?php foreach ($recent_results as $result): ?>
                                 <tr>
-                                    <td><?= htmlspecialchars($result['full_name']) ?></td>
-                                    <td><?= htmlspecialchars($result['profession_name']) ?></td>
-                                    <td><?= number_format($result['match_percentage'], 1) ?>%</td>
+                                    <td><?= htmlspecialchars($result['full_name'] ?? '') ?></td>
+                                    <td><?= htmlspecialchars($result['profession_name'] ?? '') ?></td>
+                                    <td><?= number_format($result['match_percentage'] ?? 0, 1) ?>%</td>
                                     <td><?= date('d.m.Y', strtotime($result['completed_at'])) ?></td>
                                 </tr>
                             <?php endforeach; ?>
