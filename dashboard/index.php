@@ -84,57 +84,104 @@ $stmt = $db->query("SELECT * FROM exam_dates WHERE is_active = 1 AND exam_date >
 $exam_dates = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="<?= Language::current() ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Kasb Tanlash Tizimi</title>
+    <title><?= __('nav.dashboard') ?> - <?= __('site.title') ?></title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link rel="stylesheet" href="<?= ASSETS_PATH ?>css/style.css">
     <link rel="stylesheet" href="<?= ASSETS_PATH ?>css/homepage.css">
     <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+            min-height: 100vh;
+        }
+        
         .dashboard-container {
-            max-width: 900px;
-            margin: 100px auto 50px;
+            max-width: 1000px;
+            margin: 120px auto 50px;
             padding: 0 24px;
         }
         
         .dashboard-card {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            background: var(--white);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
             margin-bottom: 30px;
+            animation: slideUp 0.4s ease;
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
         
         .dashboard-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 48px;
+            position: relative;
+        }
+        
+        .welcome-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            color: var(--white);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.3);
         }
         
         .dashboard-header h1 {
-            font-size: 32px;
-            color: #0a0a0a;
-            margin-bottom: 10px;
-            font-weight: 700;
+            font-size: 36px;
+            color: var(--dark);
+            margin-bottom: 12px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
         
         .dashboard-header p {
-            color: #666;
-            font-size: 16px;
+            color: var(--text-muted);
+            font-size: 18px;
         }
         
         .user-info-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 30px;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 40px;
+            border: 1px solid var(--primary-light);
         }
         
         .user-info-section h2 {
-            font-size: 20px;
-            color: #0a0a0a;
-            margin-bottom: 20px;
-            font-weight: 600;
+            font-size: 22px;
+            color: var(--dark);
+            margin-bottom: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-info-section h2 i {
+            color: var(--primary);
+            font-size: 24px;
         }
         
         .info-grid {
@@ -150,28 +197,44 @@ $exam_dates = $stmt->fetchAll();
         
         .info-label {
             font-size: 13px;
-            color: #666;
-            margin-bottom: 6px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            font-weight: 500;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .info-label i {
+            font-size: 16px;
+            color: var(--primary);
         }
         
         .info-value {
-            font-size: 16px;
-            color: #0a0a0a;
+            font-size: 17px;
+            color: var(--dark);
             font-weight: 600;
         }
         
         .form-section {
-            margin-bottom: 30px;
+            margin-bottom: 40px;
         }
         
         .form-section h2 {
-            font-size: 20px;
-            color: #0a0a0a;
-            margin-bottom: 20px;
-            font-weight: 600;
+            font-size: 22px;
+            color: var(--dark);
+            margin-bottom: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .form-section h2 i {
+            color: var(--primary);
+            font-size: 24px;
         }
         
         .exam-date-grid {
@@ -182,23 +245,52 @@ $exam_dates = $stmt->fetchAll();
         }
         
         .exam-date-card {
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 20px;
+            border: 2px solid var(--bg-light);
+            border-radius: 16px;
+            padding: 24px;
             cursor: pointer;
-            transition: all 0.3s;
-            background: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--white);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .exam-date-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
         
         .exam-date-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.2);
+        }
+        
+        .exam-date-card:hover::before {
+            transform: scaleX(1);
         }
         
         .exam-date-card.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary-light) 0%, #f0f4ff 100%);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
+        }
+        
+        .exam-date-card.selected::before {
+            transform: scaleX(1);
+        }
+        
+        .exam-date-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
         }
         
         .exam-date-card input[type="radio"] {
@@ -213,27 +305,33 @@ $exam_dates = $stmt->fetchAll();
         }
         
         .exam-date-day {
-            font-size: 24px;
-            font-weight: 700;
-            color: #0a0a0a;
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--dark);
+            line-height: 1;
         }
         
         .exam-date-month {
             font-size: 14px;
-            color: #666;
+            color: var(--text-muted);
             text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
         
         .exam-date-time {
-            font-size: 16px;
-            color: #667eea;
-            font-weight: 600;
-            margin-bottom: 8px;
+            font-size: 18px;
+            color: var(--primary);
+            font-weight: 700;
+            margin: 12px 0 8px;
         }
         
         .exam-date-participants {
-            font-size: 12px;
-            color: #999;
+            font-size: 13px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         
         .exam-type-selector {
@@ -244,24 +342,47 @@ $exam_dates = $stmt->fetchAll();
         }
         
         .exam-type-card {
-            border: 2px solid #e0e0e0;
-            border-radius: 12px;
-            padding: 24px;
+            border: 2px solid var(--bg-light);
+            border-radius: 16px;
+            padding: 32px;
             cursor: pointer;
-            transition: all 0.3s;
-            background: white;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--white);
             text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .exam-type-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
         }
         
         .exam-type-card:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.2);
+        }
+        
+        .exam-type-card:hover::before {
+            transform: scaleX(1);
         }
         
         .exam-type-card.selected {
-            border-color: #667eea;
-            background: #f0f4ff;
+            border-color: var(--primary);
+            background: linear-gradient(135deg, var(--primary-light) 0%, #f0f4ff 100%);
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.2);
+        }
+        
+        .exam-type-card.selected::before {
+            transform: scaleX(1);
         }
         
         .exam-type-card input[type="radio"] {
@@ -269,44 +390,63 @@ $exam_dates = $stmt->fetchAll();
         }
         
         .exam-type-icon {
-            font-size: 48px;
-            margin-bottom: 12px;
+            font-size: 56px;
+            margin-bottom: 16px;
+            color: var(--primary);
+            display: flex;
+            justify-content: center;
         }
         
         .exam-type-name {
-            font-size: 18px;
-            font-weight: 600;
-            color: #0a0a0a;
-            margin-bottom: 8px;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 10px;
         }
         
         .exam-type-desc {
-            font-size: 14px;
-            color: #666;
+            font-size: 15px;
+            color: var(--text-muted);
+            line-height: 1.5;
         }
         
         .btn-continue {
             width: 100%;
-            padding: 16px;
+            padding: 18px 24px;
             font-size: 18px;
-            font-weight: 600;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--white);
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(79, 70, 229, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 8px;
         }
         
         .btn-continue:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.4);
+        }
+        
+        .btn-continue:active {
+            transform: translateY(0);
         }
         
         .btn-continue:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
+        }
+        
+        .btn-continue i {
+            font-size: 20px;
         }
         
         @media (max-width: 768px) {
@@ -334,11 +474,13 @@ $exam_dates = $stmt->fetchAll();
         <div class="container">
             <nav class="header-nav">
                 <div class="logo">
-                    <a href="<?= BASE_URL ?>">Kasb Tanlash Tizimi</a>
+                    <a href="<?= BASE_URL ?>"><?= __('site.name') ?></a>
                 </div>
                 <div class="header-buttons">
                     <?php include INCLUDES_PATH . 'language_switcher.php'; ?>
-                    <a href="<?= BASE_URL ?>auth/login.php?logout=1" class="btn-header btn-login">Chiqish</a>
+                    <a href="<?= BASE_URL ?>auth/login.php?logout=1" class="btn-header btn-login">
+                        <i class="ri-logout-box-line"></i> <?= __('nav.logout') ?>
+                    </a>
                 </div>
             </nav>
         </div>
@@ -347,8 +489,11 @@ $exam_dates = $stmt->fetchAll();
     <div class="dashboard-container">
         <div class="dashboard-card">
             <div class="dashboard-header">
-                <h1>Xush kelibsiz!</h1>
-                <p>Imtihon ma'lumotlarini to'ldiring va to'lovni amalga oshiring</p>
+                <div class="welcome-icon">
+                    <i class="ri-user-heart-line"></i>
+                </div>
+                <h1><?= __('dashboard.welcome') ?>, <?= htmlspecialchars(explode(' ', $user['full_name'] ?? 'Foydalanuvchi')[0]) ?>!</h1>
+                <p><?= __('dashboard.subtitle') ?></p>
             </div>
             
             <?php if ($error): ?>
@@ -361,39 +506,57 @@ $exam_dates = $stmt->fetchAll();
             
             <!-- Foydalanuvchi ma'lumotlari -->
             <div class="user-info-section">
-                <h2>Ma'lumotlaringiz</h2>
+                <h2>
+                    <i class="ri-user-settings-line"></i>
+                    <?= __('dashboard.your_info') ?>
+                </h2>
                 <div class="info-grid">
                     <div class="info-item">
-                        <span class="info-label">To'liq ism</span>
-                        <span class="info-value"><?= htmlspecialchars($user['full_name'] ?? 'Kiritilmagan') ?></span>
+                        <span class="info-label">
+                            <i class="ri-user-line"></i>
+                            <?= __('auth.full_name') ?>
+                        </span>
+                        <span class="info-value"><?= htmlspecialchars($user['full_name'] ?? __('dashboard.not_provided')) ?></span>
                     </div>
                     <div class="info-item">
-                        <span class="info-label">Sinf</span>
-                        <span class="info-value"><?= $user['class_number'] ? $user['class_number'] . '-sinf' : 'Kiritilmagan' ?></span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Maktab</span>
-                        <span class="info-value"><?= htmlspecialchars($user['school_name'] ?? 'Kiritilmagan') ?></span>
-                    </div>
-                    <div class="info-item">
-                        <span class="info-label">Kirish usuli</span>
+                        <span class="info-label">
+                            <i class="ri-login-box-line"></i>
+                            <?= __('dashboard.login_method') ?>
+                        </span>
                         <span class="info-value">
                             <?php
-                            $login_types = ['phone' => 'Telefon', 'telegram' => 'Telegram', 'google' => 'Google'];
-                            echo $login_types[$user['login_type']] ?? 'Noma\'lum';
+                            $login_types = [
+                                'phone' => __('auth.phone'),
+                                'telegram' => __('auth.telegram'),
+                                'google' => __('auth.google')
+                            ];
+                            echo $login_types[$user['login_type']] ?? __('dashboard.unknown');
                             ?>
                         </span>
                     </div>
+                    <?php if (!empty($user['email'])): ?>
+                    <div class="info-item">
+                        <span class="info-label">
+                            <i class="ri-mail-line"></i>
+                            Email
+                        </span>
+                        <span class="info-value"><?= htmlspecialchars($user['email']) ?></span>
+                    </div>
+                    <?php endif; ?>
                 </div>
             </div>
             
             <form method="POST" id="dashboardForm">
                 <!-- Imtihon kuni va vaqti -->
                 <div class="form-section">
-                    <h2>Imtihon kuni va vaqti</h2>
+                    <h2>
+                        <i class="ri-calendar-line"></i>
+                        <?= __('dashboard.exam_date_time') ?>
+                    </h2>
                     <?php if (empty($exam_dates)): ?>
                         <div class="alert alert-error">
-                            Hozircha mavjud imtihon kunlari yo'q. Iltimos, keyinroq qayta urinib ko'ring.
+                            <i class="ri-error-warning-line"></i>
+                            <?= __('dashboard.no_exam_dates') ?>
                         </div>
                     <?php else: ?>
                         <div class="exam-date-grid">
@@ -428,26 +591,34 @@ $exam_dates = $stmt->fetchAll();
                 
                 <!-- Imtihon turi (Online/Offline) -->
                 <div class="form-section">
-                    <h2>Imtihon turi</h2>
+                    <h2>
+                        <i class="ri-book-open-line"></i>
+                        <?= __('dashboard.exam_type') ?>
+                    </h2>
                     <div class="exam-type-selector">
                         <label class="exam-type-card">
                             <input type="radio" name="exam_type" value="online" required>
-                            <div class="exam-type-icon">💻</div>
-                            <div class="exam-type-name">Online</div>
-                            <div class="exam-type-desc">Uydan imtihon topshirish</div>
+                            <div class="exam-type-icon">
+                                <i class="ri-computer-line"></i>
+                            </div>
+                            <div class="exam-type-name"><?= __('dashboard.online') ?></div>
+                            <div class="exam-type-desc"><?= __('dashboard.online_desc') ?></div>
                         </label>
                         
                         <label class="exam-type-card">
                             <input type="radio" name="exam_type" value="offline" required>
-                            <div class="exam-type-icon">🏫</div>
-                            <div class="exam-type-name">Offline</div>
-                            <div class="exam-type-desc">Markazda imtihon topshirish</div>
+                            <div class="exam-type-icon">
+                                <i class="ri-building-line"></i>
+                            </div>
+                            <div class="exam-type-name"><?= __('dashboard.offline') ?></div>
+                            <div class="exam-type-desc"><?= __('dashboard.offline_desc') ?></div>
                         </label>
                     </div>
                 </div>
                 
                 <button type="submit" class="btn-continue" id="submitBtn" <?= empty($exam_dates) ? 'disabled' : '' ?>>
-                    Davom etish - To'lov sahifasiga
+                    <i class="ri-arrow-right-line"></i>
+                    <?= __('dashboard.continue_payment') ?>
                 </button>
             </form>
         </div>
@@ -484,7 +655,7 @@ $exam_dates = $stmt->fetchAll();
             
             if (!examDate || !examType) {
                 e.preventDefault();
-                alert('Iltimos, imtihon kunini va turini tanlang!');
+                alert('<?= __('dashboard.please_select_exam') ?>');
                 return false;
             }
         });
