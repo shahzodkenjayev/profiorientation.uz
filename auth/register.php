@@ -65,7 +65,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['user_id'] = $existing_user['id'];
                     unset($_SESSION['telegram_auth_data']);
                     unset($_SESSION['telegram_full_name']);
-                    redirect(BASE_URL . 'payment/index.php');
+                    unset($_SESSION['telegram_username']);
+                    
+                    if ($existing_user['test_completed']) {
+                        redirect(BASE_URL . 'results/view.php');
+                    } else {
+                        redirect(BASE_URL . 'payment/index.php');
+                    }
                 } else {
                     // Yangi foydalanuvchi yaratish
                     $stmt = $db->prepare("INSERT INTO users (telegram_id, full_name, class_number, school_name, login_type, exam_date) 

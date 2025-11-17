@@ -551,7 +551,16 @@ if (isLoggedIn()) {
     <script>
         // Telegram auth callback for modal
         function onTelegramAuthModal(user) {
-            window.location.href = '<?= BASE_URL ?>auth/telegram_callback?id=' + user.id + '&first_name=' + encodeURIComponent(user.first_name) + '&last_name=' + encodeURIComponent(user.last_name || '') + '&username=' + encodeURIComponent(user.username || '') + '&auth_date=' + user.auth_date + '&hash=' + user.hash;
+            // Telegram Login Widget dan kelgan ma'lumotlarni to'g'ri formatda yuborish
+            const params = new URLSearchParams({
+                id: user.id,
+                first_name: user.first_name || '',
+                last_name: user.last_name || '',
+                username: user.username || '',
+                auth_date: user.auth_date,
+                hash: user.hash
+            });
+            window.location.href = '<?= BASE_URL ?>auth/telegram_callback?' + params.toString();
         }
         
         // Google Sign-In callback for modal

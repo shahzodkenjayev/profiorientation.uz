@@ -21,12 +21,12 @@ if (isset($auth_data['id']) && isset($auth_data['hash'])) {
     
     if (strcmp($hash, $check_hash) !== 0) {
         // Hash noto'g'ri
-        redirect(BASE_URL . 'auth/register.php?error=invalid_telegram_auth');
+        redirect(BASE_URL . 'auth/register?error=invalid_telegram_auth');
     }
     
     if ((time() - $auth_data['auth_date']) > 86400) {
         // 24 soatdan oshib ketgan
-        redirect(BASE_URL . 'auth/register.php?error=telegram_auth_expired');
+        redirect(BASE_URL . 'auth/register?error=telegram_auth_expired');
     }
     
     // Ma'lumotlar to'g'ri, foydalanuvchini yaratish yoki topish
@@ -46,7 +46,9 @@ if (isset($auth_data['id']) && isset($auth_data['hash'])) {
         if ($user) {
             // Foydalanuvchi mavjud, login qilish
             $_SESSION['user_id'] = $user['id'];
-            $_SESSION['telegram_auth_data'] = $auth_data;
+            unset($_SESSION['telegram_auth_data']);
+            unset($_SESSION['telegram_full_name']);
+            unset($_SESSION['telegram_username']);
             
             if ($user['test_completed']) {
                 redirect(BASE_URL . 'results/view.php');
@@ -58,13 +60,13 @@ if (isset($auth_data['id']) && isset($auth_data['hash'])) {
             $_SESSION['telegram_auth_data'] = $auth_data;
             $_SESSION['telegram_full_name'] = $full_name;
             $_SESSION['telegram_username'] = $username;
-            redirect(BASE_URL . 'auth/register.php?telegram=1');
+            redirect(BASE_URL . 'auth/register?telegram=1');
         }
     } catch (PDOException $e) {
-        redirect(BASE_URL . 'auth/register.php?error=db_error');
+        redirect(BASE_URL . 'auth/register?error=db_error');
     }
 } else {
     // Ma'lumotlar yetarli emas
-    redirect(BASE_URL . 'auth/register.php?error=invalid_data');
+    redirect(BASE_URL . 'auth/register?error=invalid_data');
 }
 
