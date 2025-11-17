@@ -1,0 +1,129 @@
+# Apache konfiguratsiya
+
+# Error pages
+ErrorDocument 403 /403.php
+ErrorDocument 404 /404.php
+ErrorDocument 500 /500.php
+ErrorDocument 301 /301.php
+
+# PHP sozlamalari
+# Production'da error display o'chirilgan bo'lishi kerak
+# php_flag display_errors Off
+# php_value error_reporting 0
+
+# UTF-8 encoding
+AddDefaultCharset UTF-8
+
+# Directory listing'ni o'chirish
+Options -Indexes
+
+# Security headers
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+
+# URL rewrite - PHP kengaytmasini yashirish
+RewriteEngine On
+RewriteBase /
+
+# .php kengaytmasini yashirish (301 redirect)
+# Agar foydalanuvchi register.php deb yozsa, register ga redirect qilish
+RewriteCond %{THE_REQUEST} \s/+([^.\s?]+)\.php[\s?] [NC]
+RewriteRule ^ /%1? [R=301,L]
+
+# PHP kengaytmasiz URL'ni .php fayliga yo'naltirish
+# Agar fayl mavjud bo'lmasa va papka ham bo'lmasa, .php qo'shish
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^(.*)$ $1.php [L]
+
+# Auth papkasi uchun maxsus qoida
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^auth/([^/]+)$ auth/$1.php [L]
+
+# Admin papkasi uchun maxsus qoida
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^admin/([^/]+)$ admin/$1.php [L]
+
+# Protect config papkasi va fayllari
+RewriteRule ^config/ - [F,L]
+RewriteRule ^config$ - [F,L]
+
+# Protect config files (root papkada)
+<Files "config.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+<Files "database.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+<Files "env.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# Protect .env file
+<Files ".env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# Protect admin utility scripts (production'da bloklash)
+RewriteRule ^admin/fix_password - [F,L]
+RewriteRule ^admin/reset_password - [F,L]
+<FilesMatch "^(fix_password|reset_password)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# PHP closing tag va oxiridagi bo'sh qatorlarni yashirish
+# Output buffering - PHP fayllarining oxiridagi bo'sh qatorlarni yashirish
+php_value output_buffering 4096
+php_flag output_buffering On
+
+# PHP fayllarining oxiridagi bo'sh qatorlarni olib tashlash
+# Bu PHP closing tag'dan keyin keladigan bo'sh qatorlarni yashirish uchun
+<IfModule mod_php.c>
+    php_value output_buffering 4096
+    php_flag output_buffering On
+</IfModule>
+
+# X-Powered-By header'ni yashirish (xavfsizlik uchun)
+<IfModule mod_headers.c>
+    Header unset X-Powered-By
+    Header unset Server
+</IfModule>
+
