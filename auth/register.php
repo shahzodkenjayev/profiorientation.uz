@@ -44,48 +44,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $school_name = sanitize($_POST['school_name'] ?? '');
     $exam_date = sanitize($_POST['exam_date'] ?? '');
 
-    // Telegram rejimida faqat class_number, school_name va exam_date kerak
+    // Telegram rejimida - class_number, school_name va exam_date ixtiyoriy
     if ($login_type === 'telegram' && isset($_SESSION['telegram_auth_data'])) {
-        if (empty($class_number) || empty($school_name)) {
-            $error = 'Barcha maydonlarni to\'ldiring!';
-        } else {
-            try {
-                $db = getDB();
-                $telegram_data = $_SESSION['telegram_auth_data'];
-                $telegram_id = $telegram_data['id'];
-                $telegram_full_name = $_SESSION['telegram_full_name'] ?? $full_name;
+        try {
+            $db = getDB();
+            $telegram_data = $_SESSION['telegram_auth_data'];
+            $telegram_id = $telegram_data['id'];
+            $telegram_full_name = $_SESSION['telegram_full_name'] ?? $full_name;
+            
+            // Foydalanuvchini topish
+            $stmt = $db->prepare("SELECT * FROM users WHERE telegram_id = ?");
+            $stmt->execute([$telegram_id]);
+            $existing_user = $stmt->fetch();
+            
+            if ($existing_user) {
+                // Foydalanuvchi mavjud, login qilish
+                $_SESSION['user_id'] = $existing_user['id'];
+                unset($_SESSION['telegram_auth_data']);
+                unset($_SESSION['telegram_full_name']);
+                unset($_SESSION['telegram_username']);
                 
-                // Foydalanuvchini topish
-                $stmt = $db->prepare("SELECT * FROM users WHERE telegram_id = ?");
-                $stmt->execute([$telegram_id]);
-                $existing_user = $stmt->fetch();
-                
-                if ($existing_user) {
-                    // Foydalanuvchi mavjud, login qilish
-                    $_SESSION['user_id'] = $existing_user['id'];
-                    unset($_SESSION['telegram_auth_data']);
-                    unset($_SESSION['telegram_full_name']);
-                    unset($_SESSION['telegram_username']);
-                    
-                    if ($existing_user['test_completed']) {
-                        redirect(BASE_URL . 'results/view.php');
-                    } else {
-                        redirect(BASE_URL . 'payment/index.php');
-                    }
+                if ($existing_user['test_completed']) {
+                    redirect(BASE_URL . 'results/view.php');
                 } else {
-                    // Yangi foydalanuvchi yaratish
-                    $stmt = $db->prepare("INSERT INTO users (telegram_id, full_name, class_number, school_name, login_type, exam_date) 
-                                         VALUES (?, ?, ?, ?, 'telegram', ?)");
-                    $stmt->execute([$telegram_id, $telegram_full_name, $class_number, $school_name, $exam_date]);
-                    
-                    $_SESSION['user_id'] = $db->lastInsertId();
-                    unset($_SESSION['telegram_auth_data']);
-                    unset($_SESSION['telegram_full_name']);
                     redirect(BASE_URL . 'payment/index.php');
                 }
-            } catch (PDOException $e) {
-                $error = 'Xatolik yuz berdi: ' . $e->getMessage();
+            } else {
+                // Yangi foydalanuvchi yaratish - class_number, school_name va exam_date ixtiyoriy
+                $stmt = $db->prepare("INSERT INTO users (telegram_id, full_name, class_number, school_name, login_type, exam_date) 
+                                     VALUES (?, ?, ?, ?, 'telegram', ?)");
+                $stmt->execute([
+                    $telegram_id, 
+                    $telegram_full_name, 
+                    $class_number ?: null, 
+                    $school_name ?: null, 
+                    $exam_date ?: null
+                ]);
+                
+                $_SESSION['user_id'] = $db->lastInsertId();
+                unset($_SESSION['telegram_auth_data']);
+                unset($_SESSION['telegram_full_name']);
+                redirect(BASE_URL . 'payment/index.php');
             }
+        } catch (PDOException $e) {
+            $error = 'Xatolik yuz berdi: ' . $e->getMessage();
         }
     } elseif (empty($full_name) || empty($class_number) || empty($school_name)) {
         $error = 'Barcha maydonlarni to\'ldiring!';
@@ -130,48 +132,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } elseif ($login_type === 'telegram') {
                 $error = 'Telegram orqali avval autentifikatsiya qiling!';
             } elseif ($login_type === 'google') {
-                // Google rejimida faqat class_number, school_name va exam_date kerak
+                // Google rejimida - class_number, school_name va exam_date ixtiyoriy
                 if (isset($_SESSION['google_auth_data'])) {
-                    if (empty($class_number) || empty($school_name)) {
-                        $error = 'Barcha maydonlarni to\'ldiring!';
-                    } else {
-                        $google_data = $_SESSION['google_auth_data'];
-                        $google_id = $google_data['id'];
-                        $email = $google_data['email'] ?? '';
-                        $google_full_name = $_SESSION['google_full_name'] ?? $full_name;
+                    $google_data = $_SESSION['google_auth_data'];
+                    $google_id = $google_data['id'];
+                    $email = $google_data['email'] ?? '';
+                    $google_full_name = $_SESSION['google_full_name'] ?? $full_name;
+                    
+                    // Foydalanuvchini topish - google_id yoki email orqali
+                    $stmt = $db->prepare("SELECT * FROM users WHERE google_id = ? OR email = ?");
+                    $stmt->execute([$google_id, $email]);
+                    $existing_user = $stmt->fetch();
+                    
+                    if ($existing_user) {
+                        // Foydalanuvchi mavjud, google_id ni yangilash va login qilish
+                        if (empty($existing_user['google_id'])) {
+                            $stmt = $db->prepare("UPDATE users SET google_id = ? WHERE id = ?");
+                            $stmt->execute([$google_id, $existing_user['id']]);
+                        }
                         
-                        // Foydalanuvchini topish - google_id yoki email orqali
-                        $stmt = $db->prepare("SELECT * FROM users WHERE google_id = ? OR email = ?");
-                        $stmt->execute([$google_id, $email]);
-                        $existing_user = $stmt->fetch();
+                        $_SESSION['user_id'] = $existing_user['id'];
+                        unset($_SESSION['google_auth_data']);
+                        unset($_SESSION['google_full_name']);
                         
-                        if ($existing_user) {
-                            // Foydalanuvchi mavjud, google_id ni yangilash va login qilish
-                            if (empty($existing_user['google_id'])) {
-                                $stmt = $db->prepare("UPDATE users SET google_id = ? WHERE id = ?");
-                                $stmt->execute([$google_id, $existing_user['id']]);
-                            }
-                            
-                            $_SESSION['user_id'] = $existing_user['id'];
-                            unset($_SESSION['google_auth_data']);
-                            unset($_SESSION['google_full_name']);
-                            
-                            if ($existing_user['test_completed']) {
-                                redirect(BASE_URL . 'results/view.php');
-                            } else {
-                                redirect(BASE_URL . 'payment/index.php');
-                            }
+                        if ($existing_user['test_completed']) {
+                            redirect(BASE_URL . 'results/view.php');
                         } else {
-                            // Yangi foydalanuvchi yaratish
-                            $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, class_number, school_name, login_type, exam_date) 
-                                                 VALUES (?, ?, ?, ?, ?, 'google', ?)");
-                            $stmt->execute([$google_id, $email, $google_full_name, $class_number, $school_name, $exam_date]);
-                            
-                            $_SESSION['user_id'] = $db->lastInsertId();
-                            unset($_SESSION['google_auth_data']);
-                            unset($_SESSION['google_full_name']);
                             redirect(BASE_URL . 'payment/index.php');
                         }
+                    } else {
+                        // Yangi foydalanuvchi yaratish - class_number, school_name va exam_date ixtiyoriy
+                        $stmt = $db->prepare("INSERT INTO users (google_id, email, full_name, class_number, school_name, login_type, exam_date) 
+                                             VALUES (?, ?, ?, ?, ?, 'google', ?)");
+                        $stmt->execute([
+                            $google_id, 
+                            $email, 
+                            $google_full_name, 
+                            $class_number ?: null, 
+                            $school_name ?: null, 
+                            $exam_date ?: null
+                        ]);
+                        
+                        $_SESSION['user_id'] = $db->lastInsertId();
+                        unset($_SESSION['google_auth_data']);
+                        unset($_SESSION['google_full_name']);
+                        redirect(BASE_URL . 'payment/index.php');
                     }
                 } else {
                     $error = 'Google orqali avval autentifikatsiya qiling!';
@@ -277,13 +282,13 @@ $exam_dates = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <!-- Common fields - Telegram va Google rejimida faqat sinf, maktab va imtihon sanasi ko'rsatiladi -->
-                <div id="common-fields">
-                    <div class="form-group" id="full-name-group" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">
+                <!-- Common fields - Telegram va Google rejimida yashiriladi -->
+                <div id="common-fields" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">
+                    <div class="form-group" id="full-name-group">
                         <label>To'liq ism</label>
                         <input type="text" name="full_name" id="full_name_input" 
                                value="<?= htmlspecialchars(($_SESSION['telegram_full_name'] ?? $_SESSION['google_full_name'] ?? '')) ?>" 
-                               <?= ($telegram_mode || $google_mode) ? 'readonly' : 'required' ?>>
+                               required>
                     </div>
                     
                     <div class="form-group">
@@ -314,7 +319,7 @@ $exam_dates = $stmt->fetchAll();
                     </div>
                 </div>
                 
-                <button type="submit" class="btn-primary">Ro'yxatdan o'tish</button>
+                <button type="submit" class="btn-primary" id="submit-btn" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">Ro'yxatdan o'tish</button>
             </form>
             
             <p class="text-center" id="login-link" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">
@@ -365,7 +370,8 @@ $exam_dates = $stmt->fetchAll();
                 document.getElementById('phone-section').style.display = 'none';
                 document.getElementById('telegram-section').style.display = 'block';
                 document.getElementById('google-section').style.display = 'none';
-                document.getElementById('full-name-group').style.display = 'none';
+                document.getElementById('common-fields').style.display = 'none';
+                document.getElementById('submit-btn').style.display = 'none';
                 document.getElementById('login-link').style.display = 'none';
                 
                 // Login type selector buttonlarni yangilash
@@ -381,7 +387,8 @@ $exam_dates = $stmt->fetchAll();
                 document.getElementById('phone-section').style.display = 'none';
                 document.getElementById('telegram-section').style.display = 'none';
                 document.getElementById('google-section').style.display = 'block';
-                document.getElementById('full-name-group').style.display = 'block';
+                document.getElementById('common-fields').style.display = 'none';
+                document.getElementById('submit-btn').style.display = 'none';
                 document.getElementById('login-link').style.display = 'none';
                 
                 // Login type selector buttonlarni yangilash
