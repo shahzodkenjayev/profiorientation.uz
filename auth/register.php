@@ -242,20 +242,6 @@ $exam_dates = $stmt->fetchAll();
                 <!-- Telegram login -->
                 <div id="telegram-section" class="login-section" style="display:none;">
                     <div class="form-group">
-                        <p style="text-align: center; margin-bottom: 20px; color: #666;">
-                            Telegram orqali kirish uchun quyidagi tugmani bosing:
-                        </p>
-                        <div style="text-align: center; margin-bottom: 15px;">
-                            <a href="https://t.me/<?= TELEGRAM_BOT_USERNAME ?>?start=register" 
-                               target="_blank" 
-                               class="btn-primary" 
-                               style="display: inline-block; text-decoration: none; padding: 12px 24px; border-radius: 8px;">
-                                ✈️ Telegram Bot orqali kirish
-                            </a>
-                        </div>
-                        <p style="text-align: center; font-size: 12px; color: #999; margin-top: 10px;">
-                            Yoki quyidagi Telegram Login Widget orqali:
-                        </p>
                         <div style="text-align: center; margin: 20px 0;">
                             <script async src="https://telegram.org/js/telegram-widget.js?22" 
                                     data-telegram-login="<?= TELEGRAM_BOT_USERNAME ?>" 
@@ -263,14 +249,7 @@ $exam_dates = $stmt->fetchAll();
                                     data-onauth="onTelegramAuth(user)" 
                                     data-request-access="write"
                                     data-userpic="true"
-                                    data-auth-url="<?= BASE_URL ?>auth/telegram_callback.php"></script>
-                        </div>
-                        <div id="telegram-user-info" style="display:none; margin-top: 15px; padding: 15px; background: #f0f0f0; border-radius: 8px;">
-                            <p><strong>Telegram orqali kirildi!</strong></p>
-                            <p id="telegram-user-name"></p>
-                        </div>
-                        <div style="background: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 12px; margin-top: 15px; font-size: 12px; color: #856404;">
-                            <strong>Eslatma:</strong> Agar "Bot domain invalid" xatosi chiqsa, BotFather orqali bot sozlamalarida domain qo'shing: <code>profiorientation.uz</code>
+                                    data-auth-url="<?= BASE_URL ?>auth/telegram_callback"></script>
                         </div>
                     </div>
                 </div>
@@ -278,9 +257,6 @@ $exam_dates = $stmt->fetchAll();
                 <!-- Google login -->
                 <div id="google-section" class="login-section" style="display:none;">
                     <div class="form-group">
-                        <p style="text-align: center; margin-bottom: 20px; color: #666;">
-                            Google orqali kirish uchun quyidagi tugmani bosing:
-                        </p>
                         <div style="text-align: center; margin: 20px 0;">
                             <div id="g_id_onload"
                                  data-client_id="<?= GOOGLE_CLIENT_ID ?>"
@@ -298,16 +274,12 @@ $exam_dates = $stmt->fetchAll();
                         </div>
                         <input type="hidden" name="google_id" id="google_id">
                         <input type="hidden" name="email" id="google_email">
-                        <div id="google-user-info" style="display:none; margin-top: 15px; padding: 15px; background: #f0f0f0; border-radius: 8px;">
-                            <p><strong>Google orqali kirildi!</strong></p>
-                            <p id="google-user-name"></p>
-                        </div>
                     </div>
                 </div>
                 
-                <!-- Common fields - Telegram va Google rejimida yashiriladi -->
+                <!-- Common fields - Telegram va Google rejimida faqat sinf, maktab va imtihon sanasi ko'rsatiladi -->
                 <div id="common-fields">
-                    <div class="form-group" id="full-name-group">
+                    <div class="form-group" id="full-name-group" style="<?= ($telegram_mode || $google_mode) ? 'display:none;' : '' ?>">
                         <label>To'liq ism</label>
                         <input type="text" name="full_name" id="full_name_input" 
                                value="<?= htmlspecialchars(($_SESSION['telegram_full_name'] ?? $_SESSION['google_full_name'] ?? '')) ?>" 
@@ -358,7 +330,7 @@ $exam_dates = $stmt->fetchAll();
         // Telegram Login Widget callback
         function onTelegramAuth(user) {
             // Telegram ma'lumotlarini serverga yuborish
-            const callbackUrl = '<?= BASE_URL ?>auth/telegram_callback.php';
+            const callbackUrl = '<?= BASE_URL ?>auth/telegram_callback';
             const params = new URLSearchParams(user);
             window.location.href = callbackUrl + '?' + params.toString();
         }
@@ -367,7 +339,7 @@ $exam_dates = $stmt->fetchAll();
         function onGoogleSignIn(response) {
             // JWT credential'ni serverga yuborish
             const credential = response.credential;
-            const callbackUrl = '<?= BASE_URL ?>auth/google_callback.php';
+            const callbackUrl = '<?= BASE_URL ?>auth/google_callback';
             window.location.href = callbackUrl + '?credential=' + encodeURIComponent(credential);
         }
         
