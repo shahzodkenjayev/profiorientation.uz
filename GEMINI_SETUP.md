@@ -78,8 +78,21 @@ Agar "Gemini API Key topilmadi!" xatosi chiqsa:
 - API Key to'g'ri yozilganligini tekshiring
 - Server ni qayta ishga tushiring
 
+Agar "models/gemini-pro is not found" xatosi chiqsa:
+- Bu xato tuzatildi! Endi `gemini-1.5-flash` modeli ishlatiladi
+- Kod yangilandi, server ni qayta ishga tushiring
+
 Agar "AI xatosi" chiqsa:
 - API Key to'g'ri ekanligini tekshiring
 - Internet ulanishini tekshiring
 - API limitlarini tekshiring (kunlik limit bor)
+- Ishlatilayotgan model: `gemini-1.5-flash`
+
+## Ishlatilayotgan model
+
+Tizim `gemini-1.5-flash` modelidan foydalanadi. Bu:
+- Tez ishlaydi
+- Yuqori sifatli javoblar beradi
+- `generateContent` metodini qo'llab-quvvatlaydi
+- v1beta API versiyasida mavjud
 
