@@ -91,6 +91,9 @@ define('CLICK_SERVICE_ID', env('CLICK_SERVICE_ID', ''));
 define('CLICK_SECRET_KEY', env('CLICK_SECRET_KEY', ''));
 define('CLICK_TEST_MODE', env('CLICK_TEST_MODE', '1'));
 
+// Gemini AI sozlamalari
+define('GEMINI_API_KEY', env('GEMINI_API_KEY', ''));
+
 // Helper funksiyalar
 function isLoggedIn() {
     return isset($_SESSION['user_id']);

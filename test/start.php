@@ -30,11 +30,16 @@ if (!$has_paid) {
     redirect(BASE_URL . 'payment/index.php');
 }
 
-// Test savollarini olish
-$stmt = $db->query("SELECT q.*, 
-                    (SELECT COUNT(*) FROM answer_options WHERE question_id = q.id) as option_count
+// Foydalanuvchi tilini aniqlash
+$user_language = Language::current();
+
+// Test savollarini olish (foydalanuvchi tiliga mos)
+$stmt = $db->prepare("SELECT q.*, 
+                    (SELECT COUNT(*) FROM answer_options WHERE question_id = q.id AND language = ?) as option_count
                     FROM questions q 
+                    WHERE q.language = ?
                     ORDER BY q.category, q.order_number");
+$stmt->execute([$user_language, $user_language]);
 $questions = $stmt->fetchAll();
 
 // Kategoriyalar bo'yicha guruhlash
@@ -43,8 +48,9 @@ foreach ($questions as $q) {
     $questions_by_category[$q['category']][] = $q;
 }
 
-// Javob variantlarini olish
-$stmt = $db->query("SELECT * FROM answer_options ORDER BY question_id, order_number");
+// Javob variantlarini olish (foydalanuvchi tiliga mos)
+$stmt = $db->prepare("SELECT * FROM answer_options WHERE language = ? ORDER BY question_id, order_number");
+$stmt->execute([$user_language]);
 $all_options = $stmt->fetchAll();
 
 $options_by_question = [];
@@ -53,7 +59,7 @@ foreach ($all_options as $opt) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="<?= $user_language ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
