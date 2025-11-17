@@ -260,17 +260,28 @@ if (isLoggedIn()) {
         // Login modal
         document.addEventListener('DOMContentLoaded', function() {
             const loginBtn = document.getElementById('loginToggleBtn');
+            const loginBtnHero = document.getElementById('loginToggleBtnHero');
             const loginModal = document.getElementById('loginModal');
             const closeModal = document.getElementById('closeModal');
             const loginTypeBtns = document.querySelectorAll('.login-type-btn');
             const loginSections = document.querySelectorAll('.login-section-modal');
             
-            // Login modal ochish
-            if (loginBtn && loginModal) {
-                loginBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
+            // Login modal ochish funksiyasi
+            function openLoginModal(e) {
+                if (e) e.preventDefault();
+                if (loginModal) {
                     loginModal.classList.add('active');
-                });
+                }
+            }
+            
+            // Header'dagi login tugmasi
+            if (loginBtn && loginModal) {
+                loginBtn.addEventListener('click', openLoginModal);
+            }
+            
+            // Hero section'dagi login tugmasi
+            if (loginBtnHero && loginModal) {
+                loginBtnHero.addEventListener('click', openLoginModal);
             }
             
             // Modal yopish
@@ -323,7 +334,6 @@ if (isLoggedIn()) {
                 <div class="header-buttons">
                     <?php include INCLUDES_PATH . 'language_switcher.php'; ?>
                     <button type="button" id="loginToggleBtn" class="btn-header btn-login"><?= __('nav.login') ?></button>
-                    <a href="<?= BASE_URL ?>auth/register" class="btn-header btn-register"><?= __('nav.register') ?></a>
                 </div>
             </nav>
         </div>
@@ -335,7 +345,7 @@ if (isLoggedIn()) {
             <div class="hero-content">
                 <h1 class="hero-title"><?= __('site.hero_title') ?></h1>
                 <p class="hero-subtitle"><?= __('site.hero_subtitle') ?></p>
-                <a href="<?= BASE_URL ?>auth/register" class="btn-hero"><?= __('nav.register') ?></a>
+                <button type="button" id="loginToggleBtnHero" class="btn-hero"><?= __('nav.login') ?></button>
             </div>
         </div>
     </section>
@@ -539,9 +549,6 @@ if (isLoggedIn()) {
                 </div>
             </div>
             
-            <a href="<?= BASE_URL ?>auth/register" class="register-link-modal">
-                <?= __('nav.register') ?>
-            </a>
         </div>
     </div>
     
